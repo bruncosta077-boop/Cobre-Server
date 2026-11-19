@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar para Windows](../../actions/workflows/build-windows.yml) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
+[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.1) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
@@ -26,14 +26,9 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O pacote Windows é gerado automaticamente pelo GitHub Actions a cada atualização publicada na branch principal:
+O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.1/Cobre-Server-0.4.0-beta.1-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.1/Cobre-Server-0.4.0-beta.1-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.1/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
 
-1. Abra **Actions** neste repositório.
-2. Entre em **Build Cobre Server para Windows** e abra a execução mais recente concluída.
-3. Na seção **Artifacts**, baixe **Cobre-Server-Windows-x64**.
-4. Extraia o ZIP e abra **Cobre Server.exe**.
-
-O ZIP é portátil e não exige Node.js instalado. O workflow também gera um instalador Windows. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows.
+O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 
 ## O que a central mostra
 
