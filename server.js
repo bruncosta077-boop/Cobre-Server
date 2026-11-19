@@ -6,6 +6,7 @@ const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { DatabaseSync } = require('node:sqlite');
 const { createDashboard } = require('./dashboard');
 const appInfo = require('./package.json');
@@ -317,7 +318,9 @@ function createServer(opts = {}) {
   server.dashboardSnapshot = () => {
     const devices = db.prepare('SELECT id,name,type,created,last_seen,meta FROM devices ORDER BY last_seen DESC,created DESC').all();
     return {
-      name: 'Cobre Server', version: appInfo.version, serverTime: now(), uptimeSeconds: Math.floor(process.uptime()),
+      name: 'Cobre Server', version: appInfo.version, serverTime: now(), uptimeSeconds: Math.floor(process.uptime()), dataDir: cfg.dataDir,
+      apiPort: server.address()?.port || Number(process.env.PORT || 8080),
+      lanAddresses: Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal).map((a) => a.address),
       onlineWindowMs: cfg.onlineWindow, accountCount: db.prepare('SELECT COUNT(*) AS count FROM users').get().count,
       deviceCount: devices.length,
       devices: devices.map((d) => {
@@ -339,7 +342,6 @@ if (require.main === module) {
   const host = process.env.HOST || '0.0.0.0';
   const dashboardPort = Number(process.env.DASHBOARD_PORT || 8788);
   const os = require('os');
-  const { spawn } = require('child_process');
   const score = (ip) => (ip.startsWith('192.168.') ? 3 : ip.startsWith('10.') || /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2 : ip.startsWith('169.254.') ? -1 : 0);
   const lan = Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal)
     .map((a) => a.address).sort((a, b) => score(b) - score(a));
@@ -351,11 +353,7 @@ if (require.main === module) {
     const dashboard = createDashboard(api);
     dashboard.on('error', (e) => console.error('Painel local indisponível:', e.message));
     dashboard.listen(dashboardPort, '127.0.0.1', () => {
-      const url = `http://127.0.0.1:${dashboardPort}`;
-      console.log('  Painel Cobre Server: ' + url + ' (somente neste computador)');
-      if (process.platform === 'win32' && process.env.OPEN_DASHBOARD !== '0') {
-        setTimeout(() => spawn('cmd.exe', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref(), 700);
-      }
+      console.log('  Painel local: http://127.0.0.1:' + dashboardPort + ' (somente neste computador)');
     });
   });
 }

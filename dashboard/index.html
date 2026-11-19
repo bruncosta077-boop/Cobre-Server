@@ -1,60 +1,19 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#111110">
-  <title>Cobre Server</title>
-  <link rel="stylesheet" href="/style.css">
-  <script defer src="/app.js"></script>
-</head>
-<body>
-  <div class="shell">
-    <aside class="rail">
-      <div class="brand-mark">C</div>
-      <span class="rail-label">COBRE</span>
-      <span class="rail-line"></span>
-      <span class="rail-active" aria-label="Visão geral">⌂</span>
-      <span class="rail-spacer"></span>
-      <span class="rail-version">SERVER</span>
-    </aside>
-    <main>
-      <header class="topbar">
-        <div><p class="eyebrow">ECOSSISTEMA COBRE</p><h1>Cobre Server</h1></div>
-        <div class="service-state"><span class="pulse"></span><span id="service-label">Conferindo serviço</span><span class="divider"></span><span id="version">—</span></div>
-      </header>
-
-      <section class="intro">
-        <div><h2>Visão geral</h2><p>Identidade, aparelhos e presença recente do Cobre ID.</p></div>
-        <button id="refresh" class="refresh" type="button"><span>↻</span> Atualizar</button>
-      </section>
-
-      <section class="metrics" aria-label="Resumo do serviço">
-        <article class="metric"><div class="metric-head"><span>Serviço</span><span class="metric-icon">◉</span></div><strong id="api-status">—</strong><small id="uptime">Aguardando dados</small></article>
-        <article class="metric"><div class="metric-head"><span>Contas Cobre ID</span><span class="metric-icon">◎</span></div><strong id="accounts">—</strong><small>Registradas neste servidor</small></article>
-        <article class="metric"><div class="metric-head"><span>Aparelhos ativos</span><span class="metric-icon">▣</span></div><strong><span id="online">—</span><i> / </i><span id="device-count">—</span></strong><small>Heartbeat recente / vinculados</small></article>
-        <article class="metric"><div class="metric-head"><span>Resposta local</span><span class="metric-icon">⌁</span></div><strong><span id="latency">—</span><i> ms</i></strong><small>Tempo de resposta do painel à API</small></article>
-      </section>
-
-      <section class="panel devices-panel">
-        <div class="panel-heading"><div><p class="eyebrow">COBRE ID</p><h2>Aparelhos</h2></div><span id="last-update" class="muted">Aguardando atualização</span></div>
-        <div class="table-wrap"><table><thead><tr><th>Dispositivo</th><th>Tipo</th><th>Versão</th><th>Última presença</th><th>Estado</th></tr></thead><tbody id="device-rows"><tr><td colspan="5" class="empty">Carregando dispositivos…</td></tr></tbody></table></div>
-      </section>
-
-      <section class="bottom-grid">
-        <article class="panel connection-panel">
-          <div class="panel-heading"><div><p class="eyebrow">REDE</p><h2>Estado da conexão</h2></div><span class="connection-mark">↗</span></div>
-          <div class="connection-row"><span class="connection-dot online-dot"></span><div><strong>Identidade e presença</strong><small>Gerenciadas pelo Cobre Server</small></div><b id="presence-summary">—</b></div>
-          <div class="connection-row"><span class="connection-dot neutral-dot"></span><div><strong>Biblioteca e áudio</strong><small>Fluxo direto do Desktop para o aparelho</small></div><b class="state-neutral">Direto</b></div>
-        </article>
-        <article class="panel note-panel">
-          <div class="panel-heading"><div><p class="eyebrow">DIAGNÓSTICO</p><h2>Streaming</h2></div><span class="metric-icon">⌁</span></div>
-          <p>Este painel não mede taxa nem latência do áudio. A mídia não passa pelo Cobre Server; essas métricas precisam ser informadas pelos clientes durante a conexão.</p>
-          <div class="note-foot"><span class="note-indicator"></span><span id="stream-note">Medição de streaming ainda não recebida</span></div>
-        </article>
-      </section>
-      <footer><span>Cobre Server · painel local</span><span>Atualização automática a cada 15 segundos</span></footer>
-    </main>
-  </div>
-</body>
-</html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111110"><title>Cobre Server</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body><div class="app-shell">
+  <aside class="sidebar"><div class="brand"><div class="brand-mark">C</div><div><strong>Cobre</strong><small>SERVER</small></div></div><div class="sidebar-caption">GERENCIAMENTO</div>
+    <nav aria-label="Navegação principal"><button class="nav-item active" data-page="overview"><span>⌂</span>Visão geral</button><button class="nav-item" data-page="devices"><span>▣</span>Dispositivos <i id="nav-online">0</i></button><button class="nav-item" data-page="connections"><span>⌁</span>Conexões</button><button class="nav-item" data-page="settings"><span>⚙</span>Configurações</button></nav>
+    <div class="sidebar-bottom"><div class="side-status"><span class="pulse"></span><div><b id="side-service">Iniciando</b><small>Cobre ID</small></div></div><span class="side-version" id="side-version">v0.4.0</span></div>
+  </aside>
+  <main class="main-area"><header class="appbar"><div class="breadcrumb"><span>Cobre Server</span><b>/</b><strong id="breadcrumb-page">Visão geral</strong></div><div class="app-actions"><div class="service-badge"><span class="pulse"></span><span id="service-label">Conferindo serviço</span></div><button id="refresh" class="icon-button" type="button" title="Atualizar agora" aria-label="Atualizar agora">↻</button></div></header>
+    <section class="page active" id="page-overview"><div class="page-heading"><div><p class="eyebrow">CENTRAL DE CONTROLE</p><h1>Visão geral</h1><p class="page-subtitle">Acompanhe identidade Cobre ID e os aparelhos vinculados.</p></div><div class="updated" id="last-update">Aguardando atualização</div></div>
+      <div class="metrics"><article class="metric"><div class="metric-top"><span>Estado do servidor</span><span class="metric-symbol green">◉</span></div><strong id="api-status">—</strong><small id="uptime">Aguardando dados</small></article><article class="metric"><div class="metric-top"><span>Contas Cobre ID</span><span class="metric-symbol copper">◎</span></div><strong id="accounts">—</strong><small>Registradas nesta instância</small></article><article class="metric"><div class="metric-top"><span>Dispositivos online</span><span class="metric-symbol blue">▣</span></div><strong><span id="online">—</span><i> / </i><span id="device-count">—</span></strong><small>Presença recente / vinculados</small></article><article class="metric"><div class="metric-top"><span>Resposta local</span><span class="metric-symbol violet">⌁</span></div><strong><span id="latency">—</span><i> ms</i></strong><small>Tempo da consulta ao serviço</small></article></div>
+      <div class="overview-grid"><section class="panel devices-panel"><div class="panel-title"><div><p class="eyebrow">COBRE ID</p><h2>Atividade dos dispositivos</h2></div><button class="text-button" data-go="devices">Ver todos <span>→</span></button></div><div class="table-wrap"><table><thead><tr><th>Dispositivo</th><th>Tipo</th><th>Versão</th><th>Último sinal</th><th>Estado</th></tr></thead><tbody id="overview-rows"><tr><td colspan="5" class="empty">Carregando dispositivos…</td></tr></tbody></table></div></section>
+      <section class="panel connection-panel"><div class="panel-title"><div><p class="eyebrow">REDE COBRE</p><h2>Caminho da conexão</h2></div><span class="connection-symbol">↗</span></div><div class="flow"><div class="flow-node"><span class="node-icon">ID</span><div><b>Cobre Server</b><small>Conta e presença</small></div><span class="node-state online-text">Ativo</span></div><div class="flow-line"><span></span></div><div class="flow-node"><span class="node-icon muted-icon">PC</span><div><b>Desktop</b><small>Origem da biblioteca</small></div><span class="node-state" id="desktop-state">Aguardando</span></div><div class="flow-line"><span></span></div><div class="flow-node"><span class="node-icon muted-icon">M</span><div><b>Mobile / TV</b><small>Reprodução na rede</small></div><span class="node-state" id="client-state">Aguardando</span></div></div><p class="panel-footnote">O áudio vai direto do Desktop ao aparelho. O Cobre Server não retransmite mídia.</p></section></div>
+      <section class="panel stream-panel"><div class="stream-heading"><div class="stream-icon">⌁</div><div><p class="eyebrow">DIAGNÓSTICO DE MÍDIA</p><h2 id="stream-title">Streaming ainda sem medição</h2><p id="stream-note">A taxa do áudio só aparece quando o Desktop e o Mobile enviarem essas medições.</p></div></div><span class="stream-pill" id="stream-pill">Aguardando clientes</span></section>
+    </section>
+    <section class="page" id="page-devices"><div class="page-heading"><div><p class="eyebrow">APARELHOS VINCULADOS</p><h1>Dispositivos</h1><p class="page-subtitle">Presença recebida pelo Cobre ID. Online significa heartbeat recente.</p></div></div><section class="panel devices-panel full-panel"><div class="device-toolbar"><div class="filter-tabs"><button class="filter active" data-filter="all">Todos</button><button class="filter" data-filter="online">Online</button><button class="filter" data-filter="offline">Offline</button></div><label class="search-box"><span>⌕</span><input id="device-search" type="search" placeholder="Buscar dispositivo"></label></div><div class="table-wrap"><table><thead><tr><th>Dispositivo</th><th>Tipo</th><th>Plataforma</th><th>Versão</th><th>Último sinal</th><th>Estado</th></tr></thead><tbody id="device-rows"><tr><td colspan="6" class="empty">Carregando dispositivos…</td></tr></tbody></table></div></section></section>
+    <section class="page" id="page-connections"><div class="page-heading"><div><p class="eyebrow">SAÚDE DA REDE</p><h1>Conexões</h1><p class="page-subtitle">Separando presença da conta e transmissão real de áudio.</p></div></div><div class="connection-cards"><article class="panel diagnostic-card"><span class="diagnostic-icon green">✓</span><div><p class="eyebrow">IDENTIDADE</p><h2 id="identity-status">Serviço ativo</h2><p>O Cobre Server recebe sessões e heartbeats Cobre ID.</p></div><div class="diagnostic-value"><b id="identity-online">—</b><small>dispositivos online</small></div></article><article class="panel diagnostic-card"><span class="diagnostic-icon copper">↗</span><div><p class="eyebrow">STREAMING LAN</p><h2>Áudio direto entre aparelhos</h2><p>O Desktop entrega as faixas ao Mobile/TV; o servidor central não toca nos arquivos.</p></div><div class="diagnostic-value"><b>—</b><small>taxa ainda não enviada</small></div></article></div><section class="panel note-panel"><p class="eyebrow">POR QUE A TAXA NÃO APARECE?</p><h2>As medições pertencem ao trecho que transmite o áudio.</h2><p>O Mobile precisa medir bytes recebidos durante a reprodução, e o Desktop precisa informar erros de envio. O painel não transforma “online” em qualidade de stream. Assim que os clientes reportarem medidas, elas podem ser exibidas aqui com unidade e horário.</p></section></section>
+    <section class="page" id="page-settings"><div class="page-heading"><div><p class="eyebrow">INSTÂNCIA LOCAL</p><h1>Configurações</h1><p class="page-subtitle">Portas e local dos dados desta instância.</p></div></div><div class="settings-grid"><section class="panel settings-card"><p class="eyebrow">SERVIÇO</p><h2>Endereços ativos</h2><div class="setting-row"><div><b>API Cobre ID</b><small>Usada pelo Desktop, Mobile e TV</small></div><code id="api-address">—</code></div><div class="setting-row"><div><b>Painel do aplicativo</b><small>Janela do Cobre Server neste computador</small></div><code>127.0.0.1:8788</code></div><div class="setting-row"><div><b>Dados da conta</b><small>Banco local e chave de assinatura</small></div><button class="secondary-button" id="open-data">Abrir pasta</button></div></section><section class="panel settings-card"><p class="eyebrow">APLICATIVO</p><h2>Cobre Server</h2><p class="settings-copy">Mantenha o aplicativo aberto para os aparelhos continuarem autenticando e enviando presença.</p><button class="danger-button" id="quit-app">Encerrar Cobre Server</button></section></div></section>
+    <footer><span>Cobre Server <b id="footer-version">0.4.0</b></span><span id="footer-update">Atualização automática a cada 15 segundos</span></footer>
+  </main></div></body></html>

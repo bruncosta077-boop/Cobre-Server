@@ -14,7 +14,7 @@ O serviço registra contas e dispositivos, autentica clientes, renova e revoga s
 
 O servidor local embutido no Desktop ainda usa seu próprio contrato de biblioteca e streaming. A integração por Cobre ID ainda não concede a um Mobile/TV acesso a um Desktop específico. O fluxo completo de solicitação e consulta do código também precisa ser implementado nos clientes.
 
-O Cobre Server 0.3.0 inclui um painel local em `127.0.0.1:8788`, iniciado junto da API. Ele consulta contas e presença de dispositivos sem expor o painel na rede. A métrica de resposta exibida ali mede a chamada local ao painel; não é latência do streaming. O painel só mostra latência do catálogo se um cliente a enviar em sua presença.
+O Cobre Server 0.4.0 é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio ainda dependem de medições reportadas pelos clientes.
 
 ## Diagnóstico de conexão planejado
 

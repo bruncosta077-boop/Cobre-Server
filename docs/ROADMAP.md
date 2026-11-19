@@ -1,51 +1,38 @@
 # Roadmap do Cobre Server
 
-Marcos abaixo representam trabalho futuro, salvo itens marcados como existentes. Nenhuma fase de integração vira concluída sem validar Desktop, Mobile e TV juntos.
+## Versão atual — 0.4.0 em desenvolvimento
 
-## Versão atual — 0.3.0 em desenvolvimento
-
-- [x] Contas, login e renovação de sessão.
-- [x] Dispositivos vinculados e revogáveis.
-- [x] Presença por heartbeat.
-- [x] Aprovação inicial de pareamento por código no Desktop.
-- [x] Painel local de saúde do serviço e presença dos aparelhos.
+- [x] Contas, login, sessões com renovação e dispositivos vinculados.
+- [x] Presença por heartbeat e aprovação inicial de pareamento por código no Desktop.
+- [x] Aplicativo desktop Electron para Windows, com interface de gerenciamento local.
+- [x] Painel de estado, contas, dispositivos, filtros, portas e pasta de dados.
+- [x] Workflow do GitHub Actions para gerar ZIP portátil e instalador Windows.
 - [ ] Solicitação e consulta de código nos clientes Mobile/TV.
-- [ ] Concessão limitada para um Desktop específico.
-- [ ] Acesso do Mobile/TV à biblioteca ou ao áudio do Desktop.
-- [ ] Medições de latência, taxa de transferência e falhas de stream.
+- [ ] Concessão de acesso limitada a cada Desktop host.
+- [ ] Acesso autorizado do Mobile/TV à biblioteca e ao áudio do Desktop.
+- [ ] Métricas reais de latência, taxa e erros do streaming direto.
+- [ ] Assinatura do aplicativo e atualizador integrado.
 
-## Fase 1 — Contrato de pareamento
+## Próximos marcos de integração
 
-- Fechar campos, expiração, limites e erros do fluxo de código.
-- Implementar solicitação e polling no cliente TV e aprovação equivalente no Mobile.
-- Exibir dispositivos vinculados e permitir revogação pelo usuário.
+1. Fechar o contrato de pareamento, expiração, limites e erros; implementar o fluxo nos clientes.
+2. Identificar cada Desktop host e emitir uma permissão curta, limitada e revogável.
+3. Manter o áudio direto do Desktop ao aparelho, sem retransmissão pelo serviço central.
+4. Distinguir conta ativa, Desktop alcançável na rede e stream reproduzindo com sucesso.
+5. Receber métricas agregadas reportadas pelos clientes, sem guardar áudio, caminhos, nomes de faixas ou histórico.
 
-## Fase 2 — Concessão por host
+## Aplicativo Cobre Server
 
-- Identificar cada Desktop host separadamente.
-- Emitir uma permissão curta, limitada a host e escopos de leitura/controle.
-- Fazer a revogação impedir novas solicitações de biblioteca e streaming.
-- Manter streaming de áudio direto do Desktop para o aparelho autorizado.
-
-## Fase 3 — Estado e diagnóstico
-
-- Distinguir conta conectada, host encontrado na LAN e stream funcionando.
-- Adicionar um diagnóstico de conexão iniciado pelo cliente.
-- Medir latência e taxa recebida com janela curta e amostra de áudio limitada.
-- Mostrar último heartbeat, taxa recente, erros e versão de cada cliente.
-- Não armazenar nomes de faixas, caminhos, áudio ou histórico de reprodução no serviço central.
-
-## Fase 4 — Aplicativo Cobre Server
-
-- [x] Painel local separado da API, com saúde, contas e aparelhos/heartbeat.
-- [x] Painel restrito ao próprio computador; sem credenciais e sem áudio.
-- [ ] Iniciar/parar o serviço pelo painel e consultar logs sanitizados.
-- Documentar instalação, atualização, cópia de segurança e restauração.
+- [x] Janela própria do aplicativo; não abre o painel num navegador externo.
+- [x] Encerramento controlado do serviço e acesso à pasta de dados.
+- [x] Pacote ZIP portátil e instalador gerados para Windows.
+- [ ] Assinatura digital e atualizações no próprio aplicativo.
+- [ ] Configuração assistida de rede e logs sanitizados.
 
 ## Critérios de pronto
 
-- Nenhum áudio passa pelo serviço central.
-- Um aparelho revogado perde acesso ao host.
-- Estado online não é confundido com conectividade de stream.
-- As medições são reproduzíveis, têm unidade e janela explícitas.
-- Perda de internet não derruba indevidamente o streaming já autorizado na rede local.
+- Nenhum áudio passa pelo servidor central.
+- Um aparelho revogado perde acesso ao Desktop autorizado.
+- Presença online não é confundida com conectividade ou reprodução de stream.
+- As medições têm origem, unidade e janela explícitas.
+- Perda da internet não interrompe indevidamente o streaming local já autorizado.

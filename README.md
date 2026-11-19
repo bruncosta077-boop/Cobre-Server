@@ -1,53 +1,98 @@
+<div align="center">
+
 # Cobre Server
 
-Serviço central do ecossistema Cobre para contas Cobre ID, sessões, dispositivos e pareamento. Repositório separado do Desktop e dos clientes Mobile/TV.
+**O centro de identidade e conexão do ecossistema Cobre.**
 
-## Estado atual
+Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-- Versão: **0.3.0**.
-- API HTTP em Node.js, sem dependências npm externas; requer Node **22.13 ou superior**.
-- Contas, login, sessões com renovação rotativa, dispositivos, presença e aprovação inicial de códigos de pareamento.
-- Painel local no navegador para saúde do serviço, contas, aparelhos vinculados e presença recente.
-- O painel fica restrito a `127.0.0.1:8788`; a API de Cobre ID continua na porta `8080` e acessível pela rede local.
-- Não entrega áudio e não inventa métricas de streaming. O painel diferencia presença Cobre ID da conexão direta Desktop–Mobile/TV.
+[Baixar para Windows](../../actions/workflows/build-windows.yml) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
 
-## Executar no Windows
+</div>
 
-Com Node 22.13 ou superior:
+---
 
-```bat
-Iniciar Cobre Server.bat
+## O que é
+
+O Cobre Server é um **aplicativo desktop independente** que mantém os serviços locais do Cobre ID ativos e oferece uma central visual para acompanhar contas, dispositivos e estado do serviço. Ele foi desenhado para fazer parte do Cobre Desktop, Mobile e da futura versão para Google TV / Android TV.
+
+Não é uma página hospedada nem um serviço de streaming de áudio. Ao abrir o programa, uma janela própria do Cobre Server aparece e a API fica disponível na rede local para os clientes autorizados.
+
+## Baixar o aplicativo
+
+O pacote Windows é gerado automaticamente pelo GitHub Actions a cada atualização publicada na branch principal:
+
+1. Abra **Actions** neste repositório.
+2. Entre em **Build Cobre Server para Windows** e abra a execução mais recente concluída.
+3. Na seção **Artifacts**, baixe **Cobre-Server-Windows-x64**.
+4. Extraia o ZIP e abra **Cobre Server.exe**.
+
+O ZIP é portátil e não exige Node.js instalado. O workflow também gera um instalador Windows. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows.
+
+## O que a central mostra
+
+- Estado do serviço e número de contas Cobre ID.
+- Dispositivos vinculados, tipo, plataforma, versão e último heartbeat.
+- Filtros de aparelhos online/offline e busca.
+- Tempo de resposta da API local e endereços/portas usados.
+- Diagnóstico explicando presença da conta versus streaming real.
+- Atalho para abrir a pasta de dados e opção segura para encerrar o servidor.
+
+O aplicativo atual **não mede taxa de áudio nem retransmite músicas**. Essas medidas só poderão ser exibidas quando os clientes Desktop e Mobile/TV as reportarem.
+
+## Como os aplicativos se conectam
+
+```text
+Cobre Desktop ───────────────► Cobre Mobile / Google TV
+      │                           ▲
+      └──── identidade e presença ─┤
+                                  │
+                           Cobre Server
 ```
 
-O comando inicia a API e o painel, que abre em `http://127.0.0.1:8788`. Para parar, feche a janela do serviço.
+O Cobre Server coordena contas, sessões, dispositivos e pareamento. O Desktop deve continuar sendo a origem da biblioteca; o áudio é transmitido diretamente ao aparelho na rede local. Consulte [a arquitetura detalhada](docs/ARQUITETURA.md) para limites e etapas que ainda faltam.
 
-Ou manualmente:
+## Executar em desenvolvimento
 
-```sh
-node server.js
+Requer Node.js 22.13 ou superior.
+
+```powershell
+npm install
+npm run app
 ```
 
-Por padrão, a API usa a porta `8080` e o painel local a `8788`. Configure `PORT`, `HOST`, `DASHBOARD_PORT` e `DATA_DIR` para mudar os valores. O serviço deve permanecer acessível aos clientes enquanto estiver em uso.
+Para criar localmente o instalador e ZIP:
 
-## Verificar
-
-```sh
-node --test test/server.test.js
+```powershell
+npm run dist:win
 ```
 
-## Rotas implementadas
+Os artefatos aparecem em `release/`. Para iniciar somente a API em modo de desenvolvimento: `npm start`.
 
-- `POST /v1/register`, `/v1/login`, `/v1/refresh` e `/v1/logout`.
-- `GET /v1/devices`, `DELETE /v1/devices/:id` e `POST /v1/presence`.
-- `POST /v1/device/authorization`, `/v1/device/authorize` e `/v1/device/token` para o pareamento inicial por código.
-- `GET /health` para estado básico do serviço.
+## Verificação
 
-## Dados e segurança
+```powershell
+npm test
+```
 
-Os dados operacionais ficam em `data/`, incluindo o banco e a chave de assinatura. Essa pasta está excluída do Git. **Nunca envie o banco, a chave `secret.key`, tokens ou credenciais para o repositório.** Faça cópia de segurança da chave em local privado; perder a chave invalida as sessões existentes.
+## Segurança e dados
 
-O serviço atual fala HTTP. Antes de expô-lo à internet, precisa ficar atrás de HTTPS e receber uma revisão de configuração. O painel só aceita conexões do próprio computador e não mostra segredos de sessão. Presença indica atividade recente do dispositivo; não prova que o computador está alcançável nem mede a conexão de áudio.
+O aplicativo escuta a API em `0.0.0.0:8080` para que os clientes da rede local possam acessá-la; o painel administrativo local usa `127.0.0.1:8788` e não é publicado na rede. Os dados da instância ficam em `%APPDATA%\Cobre Server\data`, incluindo banco e chave de assinatura. **Não compartilhe essa pasta.** Perder a chave invalida as sessões existentes.
+
+O serviço atual usa HTTP. Não exponha uma instância à internet sem HTTPS e uma revisão de implantação. Estado “online” significa heartbeat recente; não comprova que o Desktop está acessível nem que o áudio está tocando.
+
+## Estrutura
+
+| Caminho | Responsabilidade |
+|---|---|
+| `server.js` | API Cobre ID, autenticação, pareamento e presença |
+| `electron-main.js`, `preload.js` | Janela desktop, ciclo de vida e ações locais seguras |
+| `dashboard/` | Interface de gerenciamento embutida no aplicativo |
+| `dashboard.js` | Servidor local do painel e endpoint de status |
+| `test/` | Testes automatizados da API |
+| `docs/` | Arquitetura e roadmap do ecossistema |
+| `.github/workflows/` | Empacotamento Windows e publicação de artefatos |
 
 ## Licença
 
-Este código não declara uma licença de redistribuição. Consulte o autor antes de reutilizar ou redistribuir.
+Este repositório não declara uma licença de redistribuição. Consulte o autor antes de reutilizar o código.

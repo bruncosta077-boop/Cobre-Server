@@ -2,6 +2,8 @@
 data/*
 !data/.gitkeep
 node_modules/
+release/
+dist/
 coverage/
 *.log
 .env

@@ -2,7 +2,9 @@
 
 const $ = (id) => document.getElementById(id);
 const formatter = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-const typeNames = { desktop: 'Desktop', mobile: 'Mobile', tv: 'TV' };
+const typeNames = { desktop: 'Desktop', mobile: 'Mobile', tv: 'Google TV / Android TV' };
+let snapshot = null;
+let activeFilter = 'all';
 
 function relativeTime(timestamp) {
   if (!timestamp) return 'Ainda não conectado';
@@ -14,59 +16,116 @@ function relativeTime(timestamp) {
   return formatter.format(new Date(timestamp));
 }
 
+function cell(row, value) {
+  const td = document.createElement('td');
+  td.textContent = value || '—';
+  row.append(td);
+}
+
+function deviceRow(device, compact = false) {
+  const row = document.createElement('tr');
+  cell(row, device.name);
+  cell(row, typeNames[device.type] || 'Outro');
+  if (!compact) cell(row, device.platform || '—');
+  cell(row, device.appVersion || '—');
+  cell(row, relativeTime(device.lastSeen));
+  const state = document.createElement('td');
+  const badge = document.createElement('span');
+  badge.className = `badge ${device.online ? 'badge-online' : 'badge-offline'}`;
+  const dot = document.createElement('span');
+  badge.append(dot, document.createTextNode(device.online ? 'Online' : 'Offline'));
+  state.append(badge);
+  row.append(state);
+  return row;
+}
+
 function renderDevices(devices) {
+  const overview = $('overview-rows');
   const rows = $('device-rows');
+  overview.replaceChildren();
+  rows.replaceChildren();
   if (!devices.length) {
-    rows.innerHTML = '<tr><td colspan="5" class="empty">Nenhum aparelho cadastrado ainda.</td></tr>';
+    for (const [target, colspan] of [[overview, 5], [rows, 6]]) {
+      const tr = document.createElement('tr'); const td = document.createElement('td');
+      td.colSpan = colspan; td.className = 'empty'; td.textContent = 'Nenhum aparelho cadastrado ainda.';
+      tr.append(td); target.append(tr);
+    }
     return;
   }
-  rows.replaceChildren(...devices.map((device) => {
-    const row = document.createElement('tr');
-    const values = [device.name, typeNames[device.type] || 'Outro', device.appVersion || '—', relativeTime(device.lastSeen)];
-    for (const value of values) {
-      const cell = document.createElement('td'); cell.textContent = value; row.append(cell);
-    }
-    const state = document.createElement('td');
-    const badge = document.createElement('span'); badge.className = `badge ${device.online ? 'badge-online' : 'badge-offline'}`;
-    badge.innerHTML = `<span></span>${device.online ? 'Online' : 'Offline'}`; state.append(badge); row.append(state);
-    return row;
-  }));
+  devices.slice(0, 6).forEach((device) => overview.append(deviceRow(device, true)));
+  const query = ($('device-search')?.value || '').trim().toLocaleLowerCase('pt-BR');
+  const filtered = devices.filter((device) => {
+    const matchesState = activeFilter === 'all' || (activeFilter === 'online') === device.online;
+    const matchesText = `${device.name} ${device.type} ${device.platform || ''} ${device.appVersion || ''}`.toLocaleLowerCase('pt-BR').includes(query);
+    return matchesState && matchesText;
+  });
+  if (!filtered.length) {
+    const tr = document.createElement('tr'); const td = document.createElement('td');
+    td.colSpan = 6; td.className = 'empty'; td.textContent = 'Nenhum aparelho corresponde a este filtro.';
+    tr.append(td); rows.append(tr); return;
+  }
+  filtered.forEach((device) => rows.append(deviceRow(device)));
+}
+
+function showPage(name) {
+  const labels = { overview: 'Visão geral', devices: 'Dispositivos', connections: 'Conexões', settings: 'Configurações' };
+  if (!labels[name]) return;
+  document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === `page-${name}`));
+  document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
+  $('breadcrumb-page').textContent = labels[name];
 }
 
 async function refresh() {
-  const button = $('refresh'); button.disabled = true;
+  const button = $('refresh');
+  if (button) button.disabled = true;
   const started = performance.now();
   try {
     const response = await fetch('/api/status', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Painel sem resposta');
-    const data = await response.json();
+    if (!response.ok) throw new Error('Serviço sem resposta');
+    snapshot = await response.json();
+    const online = snapshot.devices.filter((device) => device.online).length;
     const elapsed = Math.round(performance.now() - started);
-    const online = data.devices.filter((device) => device.online).length;
-    $('service-label').textContent = 'Serviço ativo';
+    $('service-label').textContent = 'Servidor ativo';
+    $('side-service').textContent = 'Servidor ativo';
     $('api-status').textContent = 'Operacional';
-    $('uptime').textContent = `Ativo há ${Math.floor(data.uptimeSeconds / 60)} min`;
-    $('accounts').textContent = data.accountCount;
+    $('identity-status').textContent = 'Serviço ativo';
+    $('uptime').textContent = `Ativo há ${Math.floor(snapshot.uptimeSeconds / 60)} min`;
+    $('accounts').textContent = snapshot.accountCount;
     $('online').textContent = online;
-    $('device-count').textContent = data.deviceCount;
+    $('device-count').textContent = snapshot.deviceCount;
+    $('identity-online').textContent = online;
+    $('nav-online').textContent = online;
     $('latency').textContent = elapsed;
-    $('version').textContent = `v${data.version}`;
-    $('presence-summary').textContent = `${online} online`;
     $('last-update').textContent = `Atualizado às ${formatter.format(new Date())}`;
-    const catalogSamples = data.devices.filter((device) => Number.isFinite(device.catalogResponseMs));
-    if (catalogSamples.length) {
-      const average = Math.round(catalogSamples.reduce((sum, item) => sum + item.catalogResponseMs, 0) / catalogSamples.length);
-      $('stream-note').textContent = `Catálogo: média de ${average} ms entre ${catalogSamples.length} aparelho(s)`;
-    }
-    renderDevices(data.devices);
+    $('api-address').textContent = snapshot.lanAddresses?.length
+      ? snapshot.lanAddresses.map((address) => `http://${address}:${snapshot.apiPort || 8080}`).join(' · ')
+      : `http://localhost:${snapshot.apiPort || 8080}`;
+    for (const id of ['side-version', 'footer-version']) $(id).textContent = `v${snapshot.version}`;
+    $('stream-title').textContent = 'Streaming ainda sem medição';
+    $('stream-note').textContent = 'O painel mede a resposta da API local. A taxa e a estabilidade do áudio precisam ser reportadas pelo Desktop e pelo aparelho que reproduz.';
+    $('stream-pill').textContent = 'Aguardando métricas dos clientes';
+    $('desktop-state').textContent = snapshot.devices.some((d) => d.type === 'desktop' && d.online) ? 'Online' : 'Aguardando';
+    $('client-state').textContent = snapshot.devices.some((d) => ['mobile', 'tv'].includes(d.type) && d.online) ? 'Online' : 'Aguardando';
+    renderDevices(snapshot.devices);
   } catch {
-    $('service-label').textContent = 'Painel sem resposta';
+    $('service-label').textContent = 'Serviço indisponível';
+    $('side-service').textContent = 'Sem conexão';
     $('api-status').textContent = 'Indisponível';
-    $('device-rows').innerHTML = '<tr><td colspan="5" class="empty">Não foi possível consultar o serviço.</td></tr>';
   } finally {
-    button.disabled = false;
+    if (button) button.disabled = false;
   }
 }
 
+document.querySelectorAll('.nav-item').forEach((item) => item.addEventListener('click', () => showPage(item.dataset.page)));
+document.querySelectorAll('[data-go]').forEach((item) => item.addEventListener('click', () => showPage(item.dataset.go)));
+document.querySelectorAll('.filter').forEach((item) => item.addEventListener('click', () => {
+  activeFilter = item.dataset.filter;
+  document.querySelectorAll('.filter').forEach((filter) => filter.classList.toggle('active', filter === item));
+  if (snapshot) renderDevices(snapshot.devices);
+}));
+$('device-search').addEventListener('input', () => { if (snapshot) renderDevices(snapshot.devices); });
 $('refresh').addEventListener('click', refresh);
+$('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
+$('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
 refresh();
 window.setInterval(refresh, 15_000);

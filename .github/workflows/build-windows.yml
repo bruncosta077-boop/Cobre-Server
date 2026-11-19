@@ -1,0 +1,33 @@
+name: Build Cobre Server para Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13
+      - name: Instalar dependências
+        run: npm install
+      - name: Criar aplicativo e pacote Windows
+        run: npm run dist:win
+      - name: Disponibilizar ZIP portátil e instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cobre-Server-Windows-x64
+          path: |
+            release/*.zip
+            release/*.exe
+          if-no-files-found: error
+          retention-days: 30
