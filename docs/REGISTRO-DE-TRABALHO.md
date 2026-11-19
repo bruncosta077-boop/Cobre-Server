@@ -52,7 +52,9 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 
 ## Segurança e validação pendentes
 
+- Revisão estática do Desktop 3.6 encontrou `webSecurity: false` na janela principal e no mini player, além de um canal IPC genérico no preload e handlers de arquivos que recebem caminhos do renderer. A tela “Saúde do Cobre” já informa que a proteção está desligada para lidar com arquivos locais. Isso amplia o impacto de qualquer injeção de conteúdo; não declare o Desktop seguro até substituir esse acesso por protocolo local restrito, validar o remetente/caminhos de IPC e repetir testes funcionais.
 - HTTP em LAN ainda expõe senha/token a usuários da rede. Manter o serviço em rede privada e sem port forwarding.
+- O Server escuta a API em `0.0.0.0:8080` para a LAN; como é HTTP e o banco local não é criptografado em repouso, limitar a firewall/rede privada e proteger a conta Windows. O painel administrativo fica em loopback.
 - Sem assinatura digital, Windows pode exibir aviso de editor desconhecido; publicar apenas o artefato produzido pelo workflow deste repositório.
 - Conferir workflow Actions e artifact após cada push, não apenas estado local do build.
 - Não declarar 1.0 estável até validar execução real em duas máquinas na LAN, autorização por aparelho, segurança de transporte e fluxos de atualização/recuperação.
