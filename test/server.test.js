@@ -28,6 +28,16 @@ test('registro cria conta, dispositivo e sessão', async () => {
   assert.ok(r.body.accessToken && r.body.refreshToken && r.body.device.id);
 });
 
+test('chave local corrompida impede inicialização com assinatura fraca', () => {
+  const brokenDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cobre-key-'));
+  try {
+    fs.writeFileSync(path.join(brokenDir, 'secret.key'), 'deadbeef');
+    assert.throws(() => createServer({ dataDir: brokenDir }), /secret\.key está inválida/);
+  } finally {
+    fs.rmSync(brokenDir, { recursive: true, force: true });
+  }
+});
+
 test('registro valida email, senha e duplicidade', async () => {
   assert.equal((await call('POST', '/v1/register', { email: 'x', password: 'senha-forte-1', device: PC })).body.error, 'bad_email');
   assert.equal((await call('POST', '/v1/register', { email: 'b@b.com', password: '123', device: PC })).body.error, 'weak_password');

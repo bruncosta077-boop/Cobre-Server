@@ -29,7 +29,9 @@ function createServer(opts = {}) {
 
   const keyFile = path.join(cfg.dataDir, 'secret.key');
   if (!fs.existsSync(keyFile)) fs.writeFileSync(keyFile, crypto.randomBytes(32).toString('hex'), { mode: 0o600 });
-  const SECRET = Buffer.from(fs.readFileSync(keyFile, 'utf8').trim(), 'hex');
+  const keyText = fs.readFileSync(keyFile, 'utf8').trim();
+  if (!/^[0-9a-f]{64}$/i.test(keyText)) throw new Error('A chave local secret.key está inválida; o Cobre Server não iniciou. Restaure a cópia de segurança da chave.');
+  const SECRET = Buffer.from(keyText, 'hex');
 
   const db = new DatabaseSync(path.join(cfg.dataDir, 'cobre-id.db'));
   db.exec(`

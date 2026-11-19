@@ -4,6 +4,7 @@
 
 - Senhas são derivadas com `scrypt`; sessões curtas usam access token assinado e refresh token rotativo armazenado como hash.
 - A chave de assinatura é gerada localmente e os arquivos de dados ficam fora do repositório.
+- A inicialização exige uma chave de 32 bytes válida; se `secret.key` estiver truncada ou malformada, o serviço para em vez de usar uma chave fraca.
 - O painel administrativo vincula-se a `127.0.0.1`, valida origem/Host e usa CSP sem scripts remotos.
 - A janela Electron desativa Node.js no renderer, usa `contextIsolation` e `sandbox`, bloqueia janelas externas e navegação fora do painel.
 - Metadados de presença são limitados a versão, plataforma e números de diagnóstico permitidos. Caminhos de arquivos e credenciais são rejeitados.
@@ -17,7 +18,7 @@ Antes de acesso remoto pela internet, a integração deve adotar HTTPS, autoriza
 
 ## Dados locais
 
-O banco SQLite e `secret.key` ficam em `%APPDATA%\Cobre Server\data`. Restrinja acesso à sua conta do Windows e mantenha cópia de segurança privada. A chave não deve ser enviada a Issues, mensagens, logs ou commits. Apagar ou perder a chave invalida sessões existentes.
+O banco SQLite e `secret.key` ficam em `%APPDATA%\Cobre Server\data`. O banco não é criptografado em repouso; proteja o acesso ao Windows e mantenha cópia de segurança privada. A chave não deve ser enviada a Issues, mensagens, logs ou commits. Apagar ou perder a chave invalida sessões existentes.
 
 ## Relatar problemas
 

@@ -8,6 +8,7 @@ Todas as alterações relevantes são registradas aqui. O histórico geral do ec
 - Pacotes portáteis ZIP e instalador NSIS automatizados pelo GitHub Actions.
 - Logo e ícone oficiais do Cobre incorporados ao aplicativo.
 - Cadastro agora valida o tipo de dispositivo antes de gravar a conta, evitando contas incompletas.
+- Inicialização agora falha de forma segura se `secret.key` estiver truncada ou inválida, em vez de assinar tokens com chave fraca.
 - Dashboard distingue presença Cobre ID de streaming de mídia e usa filtragem/pesquisa de dispositivos.
 - Metadados de presença usam lista permitida; campos arbitrários, caminhos e segredos são descartados.
 - Os testes ficaram independentes de tokens de acesso de 1 segundo e confirmam expiração em instância isolada.

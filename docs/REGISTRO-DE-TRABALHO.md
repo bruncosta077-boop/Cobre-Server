@@ -11,11 +11,12 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - A suíte de testes foi estabilizada para usar access token longo nos casos gerais e testar a expiração em servidor isolado. A lista permitida de metadados tem cobertura contra caminhos e campos secretos.
 - Corrigida a rota da logo do painel: o app tentava ler `dashboard/icon.png`, que não existia no pacote; agora serve `dashboard/brand.png`.
 - Cadastro valida o tipo de aparelho antes de criar a conta; teste confirma que um cadastro inválido não reserva o email.
-- Testes locais finais: 12/12 passaram, incluindo host/origem não permitidos e integridade da imagem servida. `npm audit --audit-level=moderate`: zero vulnerabilidades conhecidas.
+- O serviço falha fechado se a chave local estiver truncada ou inválida; teste dedicado confirma a recusa de inicialização.
+- Testes locais: 13/13 passaram, incluindo host/origem não permitidos, chave corrompida e integridade da imagem servida. `npm audit --audit-level=moderate`: zero vulnerabilidades conhecidas.
 - Repeti `npm ci`, os 12 testes, `npm audit` e `npm run dist:win` em uma cópia limpa com Node 22.13.0 (a mesma versão fixada no workflow); tudo passou localmente.
-- `npm run dist:win` concluiu após as correções e gerou ZIP x64 (153.267.090 bytes) e instalador NSIS x64 (121.376.170 bytes). SHA-256 local: ZIP `43f16e9241479b5225d7b7c72ea963ebff8c4427b8d11694c5828a752bffd988`; EXE `562c69a085fce53880bf9f28ca75d400085e21fe25e84f63fb93a83fa2138a54`. O workflow publicado recalcula os hashes dos seus próprios artefatos.
+- `npm run dist:win` concluiu na cópia limpa Node 22.13 após validar chave corrompida e gerou ZIP x64 (153.266.914 bytes) e instalador NSIS x64 (121.376.172 bytes). SHA-256 local: ZIP `ea1032c6430305203057d8e656eeb389a5e35724747e32320f50b000126d631f`; EXE `f30c5ebd3aed7a9ce7b39782d1ec4377db765204611e61d05f3b2e333c072a73`. O workflow publicado recalcula os hashes dos seus próprios artefatos.
 - As notas da versão dentro do app citam a validação nova e o colaborador @dilucas00.
-- O commit `4ff59b2` foi enviado a `main`. O GitHub Actions desse commit falhou no passo de empacotamento; o build limpo local com Node 22.13 passou. A causa específica do runner ainda depende dos logs autenticados do GitHub. Não publiquei release enquanto o check remoto está vermelho.
+- O commit `4ff59b2` foi enviado a `main`; o registro foi atualizado em `9dfae90`. As execuções 44613524462 e 44615734832 falharam somente no passo de empacotamento. O build limpo local com Node 22.13 passou. A causa específica do runner ainda depende dos logs autenticados do GitHub; não publiquei release enquanto o check remoto está vermelho.
 - Colaborador registrado nos créditos: [@dilucas00](https://github.com/dilucas00).
 
 ## Estado por aplicativo
