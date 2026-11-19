@@ -1,0 +1,24 @@
+# Segurança do Cobre Server
+
+## Modelo atual
+
+- Senhas são derivadas com `scrypt`; sessões curtas usam access token assinado e refresh token rotativo armazenado como hash.
+- A chave de assinatura é gerada localmente e os arquivos de dados ficam fora do repositório.
+- O painel administrativo vincula-se a `127.0.0.1`, valida origem/Host e usa CSP sem scripts remotos.
+- A janela Electron desativa Node.js no renderer, usa `contextIsolation` e `sandbox`, bloqueia janelas externas e navegação fora do painel.
+- Metadados de presença são limitados a versão, plataforma e números de diagnóstico permitidos. Caminhos de arquivos e credenciais são rejeitados.
+- Os endpoints de autenticação têm limites de tentativas e os códigos temporários de pareamento expiram.
+
+## Restrições importantes
+
+O Cobre Server atual atende a uma rede privada confiável. A API aceita HTTP para facilitar o uso entre aparelhos na LAN; credenciais e tokens podem ser observados por alguém com acesso à rede Wi-Fi. Não encaminhe a porta 8080 à internet, não use Wi-Fi público e não trate um heartbeat como autorização para reproduzir mídia.
+
+Antes de acesso remoto pela internet, a integração deve adotar HTTPS, autorização curta por host/aparelho, escopos separados e revogação testada. O segredo de assinatura jamais pode ser compartilhado com os clientes.
+
+## Dados locais
+
+O banco SQLite e `secret.key` ficam em `%APPDATA%\Cobre Server\data`. Restrinja acesso à sua conta do Windows e mantenha cópia de segurança privada. A chave não deve ser enviada a Issues, mensagens, logs ou commits. Apagar ou perder a chave invalida sessões existentes.
+
+## Relatar problemas
+
+Abra uma Issue privada/contate o mantenedor antes de publicar detalhes que possam permitir acesso às contas ou sessões. Não anexe banco, tokens, senha, endereço IP público ou chave de assinatura.

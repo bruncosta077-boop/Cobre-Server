@@ -68,7 +68,7 @@ function renderDevices(devices) {
 }
 
 function showPage(name) {
-  const labels = { overview: 'Visão geral', devices: 'Dispositivos', connections: 'Conexões', settings: 'Configurações' };
+  const labels = { overview: 'Visão geral', devices: 'Dispositivos', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
   if (!labels[name]) return;
   document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === `page-${name}`));
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
@@ -101,9 +101,17 @@ async function refresh() {
       ? snapshot.lanAddresses.map((address) => `http://${address}:${snapshot.apiPort || 8080}`).join(' · ')
       : `http://localhost:${snapshot.apiPort || 8080}`;
     for (const id of ['side-version', 'footer-version']) $(id).textContent = `v${snapshot.version}`;
-    $('stream-title').textContent = 'Streaming ainda sem medição';
-    $('stream-note').textContent = 'O painel mede a resposta da API local. A taxa e a estabilidade do áudio precisam ser reportadas pelo Desktop e pelo aparelho que reproduz.';
-    $('stream-pill').textContent = 'Aguardando métricas dos clientes';
+    const catalogSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.catalogResponseMs));
+    if (catalogSamples.length) {
+      const average = Math.round(catalogSamples.reduce((sum, device) => sum + device.catalogResponseMs, 0) / catalogSamples.length);
+      $('stream-title').textContent = `Catálogo do Desktop: ${average} ms`;
+      $('stream-note').textContent = `Média de ${catalogSamples.length} consulta(s) enviada(s) pelo Mobile. Essa medida não representa a velocidade do áudio.`;
+      $('stream-pill').textContent = 'Resposta do catálogo';
+    } else {
+      $('stream-title').textContent = 'Streaming ainda sem medição';
+      $('stream-note').textContent = 'O painel mede a resposta da API local. A taxa e a estabilidade do áudio precisam ser reportadas pelo Desktop e pelo aparelho que reproduz.';
+      $('stream-pill').textContent = 'Aguardando métricas dos clientes';
+    }
     $('desktop-state').textContent = snapshot.devices.some((d) => d.type === 'desktop' && d.online) ? 'Online' : 'Aguardando';
     $('client-state').textContent = snapshot.devices.some((d) => ['mobile', 'tv'].includes(d.type) && d.online) ? 'Online' : 'Aguardando';
     renderDevices(snapshot.devices);

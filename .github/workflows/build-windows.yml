@@ -3,6 +3,7 @@ name: Build Cobre Server para Windows
 on:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -18,16 +19,55 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.13
-      - name: Instalar dependências
-        run: npm install
+      - name: Instalar dependências fixadas
+        run: npm ci
+      - name: Testar API e autenticação
+        run: npm test
+      - name: Auditar dependências
+        run: npm audit --audit-level=moderate
       - name: Criar aplicativo e pacote Windows
         run: npm run dist:win
+      - name: Gerar checksums SHA-256
+        shell: pwsh
+        run: |
+          Get-ChildItem release -File | Where-Object { $_.Extension -in '.zip', '.exe' } | ForEach-Object {
+            $hash = Get-FileHash $_.FullName -Algorithm SHA256
+            "$($hash.Hash.ToLower())  $($_.Name)"
+          } | Set-Content release/checksums-sha256.txt
       - name: Disponibilizar ZIP portátil e instalador
         uses: actions/upload-artifact@v4
         with:
           name: Cobre-Server-Windows-x64
           path: |
-            release/*.zip
-            release/*.exe
+            release/Cobre-Server-*-Windows-x64.zip
+            release/Cobre-Server-*-Windows-x64.exe
+            release/checksums-sha256.txt
           if-no-files-found: error
           retention-days: 30
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Baixar pacote verificado
+        uses: actions/download-artifact@v4
+        with:
+          name: Cobre-Server-Windows-x64
+          path: release
+      - name: Publicar release para download permanente
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Cobre Server ${{ github.ref_name }}
+          body: |
+            Pacote Windows gerado e verificado automaticamente pelo GitHub Actions.
+
+            Inclui ZIP portátil, instalador e `checksums-sha256.txt`. Consulte `CHANGELOG.md` para as alterações e limites desta versão.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            release/Cobre-Server-*-Windows-x64.zip
+            release/Cobre-Server-*-Windows-x64.exe
+            release/checksums-sha256.txt

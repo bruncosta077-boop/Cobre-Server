@@ -121,6 +121,20 @@ function createServer(opts = {}) {
   const failKey = (k) => { const e = fails.get(k); if (!e || e.reset < now()) { fails.set(k, { n: 0, reset: now() + 15 * 60_000 }); } return fails.get(k); };
   const blocked = (k, max) => { const e = fails.get(k); return e && e.reset >= now() && e.n >= max ? Math.ceil((e.reset - now()) / 1000) : 0; };
   const addFail = (k) => { failKey(k).n++; };
+  const presenceMeta = (input) => {
+    const source = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
+    const out = {};
+    for (const key of ['platform', 'appVersion']) {
+      const value = str(source[key], 32);
+      if (value) out[key] = value;
+    }
+    for (const key of ['catalogResponseMs', 'streamLatencyMs', 'streamBytesPerSecond']) {
+      const value = source[key];
+      if (Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000_000) out[key] = value;
+    }
+    if (typeof source.desktopHostActive === 'boolean') out.desktopHostActive = source.desktopHostActive;
+    return out;
+  };
   setInterval(() => { for (const [k, e] of fails) if (e.reset < now()) fails.delete(k); for (const [k, t] of deviceStarts) if (t < now() - 15 * 60_000) deviceStarts.delete(k); q.purge.run(now()); db.prepare('DELETE FROM device_codes WHERE expires < ?').run(now()); }, 600_000).unref();
 
   // ---- util HTTP ----
@@ -184,6 +198,7 @@ function createServer(opts = {}) {
       const pw = typeof body.password === 'string' ? body.password : '';
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpError(400, 'bad_email', 'Email inválido.');
       if (pw.length < 8 || pw.length > 200) throw new HttpError(400, 'weak_password', 'A senha precisa ter de 8 a 200 caracteres.');
+      if (!TYPES.has(body.device?.type)) throw new HttpError(400, 'bad_device', 'Tipo de dispositivo inválido.');
       addFail('ip:' + ip); // registros também contam no limite por IP
       if (q.userByEmail.get(email)) throw new HttpError(409, 'email_taken', 'Este email já tem conta.');
       const user = { id: crypto.randomUUID(), email };
@@ -235,9 +250,8 @@ function createServer(opts = {}) {
 
     'POST /v1/presence': async (req, body) => {
       const a = auth(req);
-      const meta = JSON.stringify(typeof body.meta === 'object' && body.meta ? body.meta : {}).slice(0, 1024);
-      let m = '{}'; try { m = JSON.stringify(JSON.parse(meta)); } catch {}
-      q.seen.run(now(), m, a.did);
+      const meta = JSON.stringify(presenceMeta(body.meta));
+      q.seen.run(now(), meta, a.did);
       return [200, { ok: true, serverTime: now() }];
     },
 
@@ -327,7 +341,10 @@ function createServer(opts = {}) {
         let meta = {}; try { meta = JSON.parse(d.meta); } catch {}
         return { id: d.id, name: d.name, type: d.type, createdAt: d.created, lastSeen: d.last_seen || null,
           online: d.last_seen > now() - cfg.onlineWindow, appVersion: str(meta.appVersion, 32), platform: str(meta.platform, 32),
-          catalogResponseMs: Number.isFinite(meta.catalogResponseMs) ? Math.max(0, Math.round(meta.catalogResponseMs)) : null };
+          catalogResponseMs: Number.isSafeInteger(meta.catalogResponseMs) ? meta.catalogResponseMs : null,
+          streamLatencyMs: Number.isSafeInteger(meta.streamLatencyMs) ? meta.streamLatencyMs : null,
+          streamBytesPerSecond: Number.isSafeInteger(meta.streamBytesPerSecond) ? meta.streamBytesPerSecond : null,
+          desktopHostActive: meta.desktopHostActive === true };
       }),
     };
   };
