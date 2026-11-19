@@ -17,8 +17,8 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - `npm run dist:win` concluiu na cópia limpa Node 22.13 após validar chave corrompida e gerou ZIP x64 (153.266.914 bytes) e instalador NSIS x64 (121.376.172 bytes). SHA-256 local: ZIP `ea1032c6430305203057d8e656eeb389a5e35724747e32320f50b000126d631f`; EXE `f30c5ebd3aed7a9ce7b39782d1ec4377db765204611e61d05f3b2e333c072a73`. O workflow publicado recalcula os hashes dos seus próprios artefatos.
 - As notas da versão dentro do app citam a validação nova e o colaborador @dilucas00.
 - A execução 44621300944 expôs a causa fatal em anotação pública: o electron-builder detectava CI e tentava publicar implicitamente, mas não havia `GH_TOKEN`. O script agora usa `--publish never`; a publicação fica na etapa explícita `publish-release`.
-- O comando corrigido foi executado localmente com Node 22.13.0 e gerou ZIP e instalador Windows x64. SHA-256 do ZIP `1c2cdd77faae505672747be15b5d859004ea611962acd7f401b65299b40926c3`; EXE `d19711ac25ca23edf961e1e6a09bdbfef4991635bd02dfadc6e8870ca698c597`. Build remoto ainda precisa confirmar o pacote e recalcular seus próprios hashes.
-- O pacote e o changelog agora usam `0.4.0-beta.1` de forma consistente; a release permanece sem tag até o Actions passar.
+- Build local com Node 22.13.0 gerou ZIP beta (153.267.180 bytes; SHA-256 `188ce8fa874cc1b763d66fd156e307be0c37e99e94fefc0549f3975a6b29dbee`) e instalador (121.376.283 bytes; SHA-256 `227ea6e8520b49b7efade4c80d1fb7b8a80f4a1c7c395649c15a4212c6911db5`). Verificados integridade do ZIP, `app.asar` e recursos da dashboard; assinatura Authenticode ausente.
+- O commit `639e5f2` corrigiu o modo de publicação e alinhou `package.json`/lock/changelog com `0.4.0-beta.1`. A execução Actions `44623918563` passou por testes, auditoria, empacotamento Windows, SHA-256 e upload do artefato. A pré-release permanente ainda aguarda tag; teste visual no Windows continua pendente.
 - Colaborador registrado nos créditos: [@dilucas00](https://github.com/dilucas00).
 
 ## Estado por aplicativo
@@ -48,7 +48,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 ### Cobre TV
 
 - Ainda não há repositório GitHub Cobre TV. A base foi importada para o repositório local `Cobre TV/cobre-tv/cobre-tv`, commit `0b01b7f`; inclui README, changelog, registro, logo/banner, wrapper verificado e workflow de compilação.
-- Protótipo `0.1.0` compilado pelo Gradle Wrapper 8.9 (35 tarefas); APK debug 9.214.200 bytes, SHA-256 `a5a2e5074d2eef32aaf07429f35c42b6551ef655d04b4a75e4ba2f408997b3fb`.
+- Protótipo `0.1.0` compilado pelo Gradle Wrapper 8.9 (35 tarefas); APK debug 9.220.558 bytes, SHA-256 `c12c10a9bbf4a8fc36a82ba1a112d282540e1542f84bfe3122cb0bacd3efa5fc`; manifesto não pede Internet até haver função de rede.
 - Ainda usa álbuns falsos e não reproduz áudio, não pareia nem consulta Desktop/Cobre ID. Não foi testado em TV/emulador; não trate como app utilizável ou release.
 
 ## Segurança e validação pendentes
