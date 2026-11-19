@@ -3,7 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('fs'); const os = require('os'); const path = require('path');
-const { createServer } = require('../server');
+const { createServer, isLanAddress } = require('../server');
 const { createDashboard } = require('../dashboard');
 
 let srv, base, dir;
@@ -12,6 +12,25 @@ const call = async (method, p, body, token) => {
   return { status: r.status, body: await r.json(), headers: r.headers };
 };
 const PC = { name: 'PC da sala', type: 'desktop' }, CEL = { name: 'Pixel', type: 'mobile' };
+
+test('a API aceita por padrão somente origens loopback ou de rede local', () => {
+  for (const ip of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.254', '192.168.1.9', '169.254.2.3', '::1', 'fc00::1', 'fd12:3456::1', 'fe80::1%12', '::ffff:192.168.1.9']) {
+    assert.equal(isLanAddress(ip), true, `${ip} deveria ser local`);
+  }
+  for (const ip of ['8.8.8.8', '172.32.0.1', '100.64.0.1', '2001:4860:4860::8888', '::ffff:0808:0808', 'fclan', 'not-an-ip', '']) {
+    assert.equal(isLanAddress(ip), false, `${ip} deveria ser recusado`);
+  }
+});
+
+test('a API recusa um pedido vindo de endereço público antes de atender a rota', async () => {
+  const requestHandler = srv.listeners('request')[0];
+  const req = { socket: { remoteAddress: '8.8.8.8' }, method: 'GET', url: '/health', headers: {} };
+  let status, body;
+  const res = { writeHead(code) { status = code; }, end(value) { body = value; } };
+  await requestHandler(req, res);
+  assert.equal(status, 403);
+  assert.equal(JSON.parse(body).error, 'network_not_allowed');
+});
 
 before(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cobre-'));

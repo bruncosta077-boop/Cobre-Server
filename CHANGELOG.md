@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
+## 0.4.0-beta.2 — revisão de segurança em validação
+
+- A API recusa, por padrão, conexões de origem fora de loopback e redes locais privadas, mesmo quando a porta está encaminhada para a internet.
+- Cobertos endereços IPv4 privados, loopback, link-local, IPv6 ULA e endereços IPv4 mapeados em IPv6.
+- A suíte atual tem 15 testes aprovados; a compilação e o uso em uma LAN real ainda precisam de validação antes de promover a beta.
+- HTTP na rede local continua sem criptografia; mantenha a instância em Wi-Fi confiável e não use como servidor público.
+
 ## 0.4.0-beta.1 — pré-lançamento para validação
 
 - Aplicativo desktop Electron para Windows com painel de visão geral, dispositivos, conexões, configurações e notas da versão.

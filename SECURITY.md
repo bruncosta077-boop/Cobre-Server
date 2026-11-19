@@ -6,13 +6,14 @@
 - A chave de assinatura é gerada localmente e os arquivos de dados ficam fora do repositório.
 - A inicialização exige uma chave de 32 bytes válida; se `secret.key` estiver truncada ou malformada, o serviço para em vez de usar uma chave fraca.
 - O painel administrativo vincula-se a `127.0.0.1`, valida origem/Host e usa CSP sem scripts remotos.
+- A API verifica o endereço IP de origem e, por padrão, aceita somente loopback, faixas IPv4 privadas, IPv6 ULA e link-local. Endereços públicos são recusados mesmo se a porta for encaminhada no roteador.
 - A janela Electron desativa Node.js no renderer, usa `contextIsolation` e `sandbox`, bloqueia janelas externas e navegação fora do painel.
 - Metadados de presença são limitados a versão, plataforma e números de diagnóstico permitidos. Caminhos de arquivos e credenciais são rejeitados.
 - Os endpoints de autenticação têm limites de tentativas e os códigos temporários de pareamento expiram.
 
 ## Restrições importantes
 
-O Cobre Server atual atende a uma rede privada confiável. A API aceita HTTP para facilitar o uso entre aparelhos na LAN; credenciais e tokens podem ser observados por alguém com acesso à rede Wi-Fi. Não encaminhe a porta 8080 à internet, não use Wi-Fi público e não trate um heartbeat como autorização para reproduzir mídia.
+O Cobre Server atual atende a uma rede privada confiável. A API aceita HTTP para facilitar o uso entre aparelhos na LAN; credenciais e tokens podem ser observados por alguém com acesso à rede Wi-Fi. O filtro de IP reduz exposição pública acidental, mas não cifra a conexão nem substitui uma política de firewall. Não use Wi-Fi público e não trate um heartbeat como autorização para reproduzir mídia.
 
 Antes de acesso remoto pela internet, a integração deve adotar HTTPS, autorização curta por host/aparelho, escopos separados e revogação testada. O segredo de assinatura jamais pode ser compartilhado com os clientes.
 

@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.1) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
+[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.2) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
@@ -26,7 +26,7 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.1/Cobre-Server-0.4.0-beta.1-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.1/Cobre-Server-0.4.0-beta.1-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.1/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
+O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.2/Cobre-Server-0.4.0-beta.2-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.2/Cobre-Server-0.4.0-beta.2-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.2/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
 
 O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 
@@ -78,7 +78,7 @@ npm test
 
 ## Segurança e dados
 
-O aplicativo escuta a API em `0.0.0.0:8080` para que os clientes da rede local possam acessá-la; o painel administrativo local usa `127.0.0.1:8788` e não é publicado na rede. Os dados da instância ficam em `%APPDATA%\Cobre Server\data`, incluindo banco e chave de assinatura. **Não compartilhe essa pasta.** Perder a chave invalida as sessões existentes.
+O aplicativo escuta a API em `0.0.0.0:8080` para que os clientes da rede local possam acessá-la, mas recusa conexões cujo IP de origem não seja loopback ou uma faixa local privada. O painel administrativo usa `127.0.0.1:8788` e não é publicado na rede. Essa barreira reduz exposição acidental, mas não substitui HTTPS, firewall ou segurança do roteador. Os dados da instância ficam em `%APPDATA%\Cobre Server\data`, incluindo banco e chave de assinatura. **Não compartilhe essa pasta.** Perder a chave invalida as sessões existentes.
 
 O serviço atual usa HTTP. Não exponha uma instância à internet sem HTTPS e uma revisão de implantação. Estado “online” significa heartbeat recente; não comprova que o Desktop está acessível nem que o áudio está tocando.
 

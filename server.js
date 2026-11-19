@@ -3,6 +3,7 @@
 // Sem dependências externas: Node >= 22.13 (node:sqlite embutido).
 // TLS NÃO é feito aqui: coloque um proxy HTTPS (Caddy/nginx) na frente em produção.
 const http = require('http');
+const net = require('net');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +15,30 @@ const appInfo = require('./package.json');
 const b64u = (b) => Buffer.from(b).toString('base64url');
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const now = () => Date.now();
+
+function isLanAddress(raw) {
+  const address = String(raw || '').toLowerCase().split('%')[0];
+  const family = net.isIP(address);
+  if (family === 6) {
+    if (address === '::1') return true;
+    if (address.startsWith('::ffff:')) {
+      const mapped = address.slice(7);
+      if (net.isIP(mapped) === 4) return isLanAddress(mapped);
+      const words = mapped.split(':');
+      if (words.length === 2 && words.every((word) => /^[0-9a-f]{1,4}$/.test(word))) {
+        const high = Number.parseInt(words[0], 16), low = Number.parseInt(words[1], 16);
+        return isLanAddress(`${high >>> 8}.${high & 255}.${low >>> 8}.${low & 255}`);
+      }
+      return false;
+    }
+    const first = Number.parseInt(address.split(':')[0] || '0', 16);
+    return (first & 0xfe00) === 0xfc00 || (first & 0xffc0) === 0xfe80; // ULA ou link-local
+  }
+  if (family !== 4) return false;
+  const octets = address.split('.').map(Number);
+  const [a, b] = octets;
+  return a === 10 || a === 127 || (a === 169 && b === 254) || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
+}
 
 function createServer(opts = {}) {
   const cfg = {
@@ -305,6 +330,7 @@ function createServer(opts = {}) {
 
   const server = http.createServer(async (req, res) => {
     try {
+      if (!isLanAddress(req.socket.remoteAddress)) throw new HttpError(403, 'network_not_allowed', 'O Cobre Server aceita conexões locais por padrão.');
       const url = new URL(req.url, 'http://x');
       let key = `${req.method} ${url.pathname}`;
       let handler = routes[key];
@@ -354,7 +380,7 @@ function createServer(opts = {}) {
   return server;
 }
 
-module.exports = { createServer };
+module.exports = { createServer, isLanAddress };
 
 if (require.main === module) {
   const port = Number(process.env.PORT || 8080);
