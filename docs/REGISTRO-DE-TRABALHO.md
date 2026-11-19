@@ -18,7 +18,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - As notas da versão dentro do app citam a validação nova e o colaborador @dilucas00.
 - A execução 44621300944 expôs a causa fatal em anotação pública: o electron-builder detectava CI e tentava publicar implicitamente, mas não havia `GH_TOKEN`. O script agora usa `--publish never`; a publicação fica na etapa explícita `publish-release`.
 - Build local com Node 22.13.0 gerou ZIP beta (153.267.180 bytes; SHA-256 `188ce8fa874cc1b763d66fd156e307be0c37e99e94fefc0549f3975a6b29dbee`) e instalador (121.376.283 bytes; SHA-256 `227ea6e8520b49b7efade4c80d1fb7b8a80f4a1c7c395649c15a4212c6911db5`). Verificados integridade do ZIP, `app.asar` e recursos da dashboard; assinatura Authenticode ausente.
-- O commit `639e5f2` corrigiu o modo de publicação e alinhou `package.json`/lock/changelog com `0.4.0-beta.1`. A execução Actions `44623918563` passou por testes, auditoria, empacotamento Windows, SHA-256 e upload do artefato. A pré-release permanente ainda aguarda tag; teste visual no Windows continua pendente.
+- O commit `639e5f2` corrigiu o modo de publicação e alinhou `package.json`/lock/changelog com `0.4.0-beta.1`. Actions passou por testes, auditoria, empacotamento Windows, checksums e upload; a tag `v0.4.0-beta.1` agora tem release pública com ZIP, instalador e checksums. Baixei o ZIP publicado (153.267.221 bytes), validei os 75 itens e `app.asar`; SHA-256 bate com a release: `b38d0e078990e3b4e6003e9e9187af5eed2aa6131ab65d0950e84c8c99ad1a3f`. O instalador é não assinado. Teste visual e de rede no Windows continuam pendentes.
 - Colaborador registrado nos créditos: [@dilucas00](https://github.com/dilucas00).
 
 ## Estado por aplicativo
@@ -43,7 +43,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - Repositório: [bruncosta077-boop/Cobre-Server](https://github.com/bruncosta077-boop/Cobre-Server).
 - Versão `0.4.0-beta.1` preparada para validação. O fluxo de conta, sessões, dispositivos, presença e pareamento inicial existe.
 - Não é um relay de mídia; o stream existente entre Mobile e Desktop é direto na LAN. Server ainda não descobre hosts nem mede o stream.
-- Próximo passo: confirmar no Actions a correção do build, então publicar a pré-release; depois validar o ZIP no Windows, portas, LAN, revogação, saída/relançamento e dados. O teste visual do executável está pendente; a tentativa anterior abriu o alerta do Firewall e não foi autorizada aqui.
+- Próximo passo: validar a beta em Windows e LAN (portas, autorização, revogação, encerramento/relançamento e dados); testar Mobile 0.7; então decidir quais lacunas de integração precisam entrar antes de planejar 1.0. O teste visual do executável está pendente; a tentativa anterior abriu o alerta do Firewall e não foi autorizada aqui.
 
 ### Cobre TV
 
