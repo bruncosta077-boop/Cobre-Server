@@ -9,11 +9,12 @@ Todas as alterações relevantes são registradas aqui. O histórico geral do ec
 - Logo e ícone oficiais do Cobre incorporados ao aplicativo.
 - Cadastro agora valida o tipo de dispositivo antes de gravar a conta, evitando contas incompletas.
 - Inicialização agora falha de forma segura se `secret.key` estiver truncada ou inválida, em vez de assinar tokens com chave fraca.
+- Empacotamento do Windows impede publicação implícita do electron-builder; publicar release é uma etapa explícita e separada do workflow.
 - Dashboard distingue presença Cobre ID de streaming de mídia e usa filtragem/pesquisa de dispositivos.
 - Metadados de presença usam lista permitida; campos arbitrários, caminhos e segredos são descartados.
 - Os testes ficaram independentes de tokens de acesso de 1 segundo e confirmam expiração em instância isolada.
-- Testes locais: 12 passaram; `npm audit --audit-level=moderate` retornou zero vulnerabilidades conhecidas.
-- Empacotamento Windows x64 validado; ZIP portátil e instalador gerados localmente. Os hashes de cada arquivo acompanham a release.
+- Testes locais: 13 passaram; `npm audit --audit-level=moderate` retornou zero vulnerabilidades conhecidas.
+- Empacotamento Windows x64 validado localmente; o comando fixa `--publish never` para separar geração do pacote e publicação da release.
 - Teste automatizado do painel confirma logo disponível, headers de proteção e bloqueio de Host/Origin não permitidos.
 - Inclui contribuições de [@dilucas00](https://github.com/dilucas00).
 

@@ -16,8 +16,9 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - Repeti `npm ci`, os 12 testes, `npm audit` e `npm run dist:win` em uma cópia limpa com Node 22.13.0 (a mesma versão fixada no workflow); tudo passou localmente.
 - `npm run dist:win` concluiu na cópia limpa Node 22.13 após validar chave corrompida e gerou ZIP x64 (153.266.914 bytes) e instalador NSIS x64 (121.376.172 bytes). SHA-256 local: ZIP `ea1032c6430305203057d8e656eeb389a5e35724747e32320f50b000126d631f`; EXE `f30c5ebd3aed7a9ce7b39782d1ec4377db765204611e61d05f3b2e333c072a73`. O workflow publicado recalcula os hashes dos seus próprios artefatos.
 - As notas da versão dentro do app citam a validação nova e o colaborador @dilucas00.
-- O código de chave corrompida foi enviado no commit `f32ba56`; o registro anterior está em `9dfae90`. As execuções 44613524462, 44615734832 e 44616970498 falharam somente no passo de empacotamento. O build limpo local com Node 22.13 passou. A causa específica do runner depende dos logs autenticados do GitHub; não publiquei release enquanto o check remoto está vermelho.
-- A execução 44617773153 também falhou no passo `npm run dist:win`; API pública confirma apenas `Process completed with exit code 1`. Testes, auditoria e instalação das dependências passaram no runner. O log detalhado continua inacessível sem autenticação; não alterei o workflow por tentativa.
+- A execução 44621300944 expôs a causa fatal em anotação pública: o electron-builder detectava CI e tentava publicar implicitamente, mas não havia `GH_TOKEN`. O script agora usa `--publish never`; a publicação fica na etapa explícita `publish-release`.
+- O comando corrigido foi executado localmente com Node 22.13.0 e gerou ZIP e instalador Windows x64. SHA-256 do ZIP `1c2cdd77faae505672747be15b5d859004ea611962acd7f401b65299b40926c3`; EXE `d19711ac25ca23edf961e1e6a09bdbfef4991635bd02dfadc6e8870ca698c597`. Build remoto ainda precisa confirmar o pacote e recalcular seus próprios hashes.
+- O pacote e o changelog agora usam `0.4.0-beta.1` de forma consistente; a release permanece sem tag até o Actions passar.
 - Colaborador registrado nos créditos: [@dilucas00](https://github.com/dilucas00).
 
 ## Estado por aplicativo
@@ -40,15 +41,15 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 ### Cobre Server
 
 - Repositório: [bruncosta077-boop/Cobre-Server](https://github.com/bruncosta077-boop/Cobre-Server).
-- Versão 0.4.0 em beta de validação. O fluxo de conta, sessões, dispositivos, presença e pareamento inicial existe.
+- Versão `0.4.0-beta.1` preparada para validação. O fluxo de conta, sessões, dispositivos, presença e pareamento inicial existe.
 - Não é um relay de mídia; o stream existente entre Mobile e Desktop é direto na LAN. Server ainda não descobre hosts nem mede o stream.
-- Próximo passo: resolver a falha remota do Actions e publicar a beta; depois validar o ZIP no Windows, portas, LAN, revogação, saída/relançamento e dados. O teste visual do executável está pendente; a tentativa anterior abriu o alerta do Firewall e não foi autorizada aqui.
+- Próximo passo: confirmar no Actions a correção do build, então publicar a pré-release; depois validar o ZIP no Windows, portas, LAN, revogação, saída/relançamento e dados. O teste visual do executável está pendente; a tentativa anterior abriu o alerta do Firewall e não foi autorizada aqui.
 
 ### Cobre TV
 
-- Não há repositório Cobre TV entre os três repositórios GitHub atuais; há apenas o pacote inicial local `Cobre TV/cobre-tv-starter.zip`.
-- A trilha de release notes deve começar quando a versão de código for importada para um repositório próprio.
-- Base planejada: navegação por D-pad, pareamento Cobre ID por código, biblioteca do Desktop autorizada e playback Media3; nenhuma dessas funções deve ser declarada pronta sem build e teste em Android TV/Google TV.
+- Ainda não há repositório GitHub Cobre TV. A base foi importada para o repositório local `Cobre TV/cobre-tv/cobre-tv`, commit `0b01b7f`; inclui README, changelog, registro, logo/banner, wrapper verificado e workflow de compilação.
+- Protótipo `0.1.0` compilado pelo Gradle Wrapper 8.9 (35 tarefas); APK debug 9.214.200 bytes, SHA-256 `a5a2e5074d2eef32aaf07429f35c42b6551ef655d04b4a75e4ba2f408997b3fb`.
+- Ainda usa álbuns falsos e não reproduz áudio, não pareia nem consulta Desktop/Cobre ID. Não foi testado em TV/emulador; não trate como app utilizável ou release.
 
 ## Segurança e validação pendentes
 

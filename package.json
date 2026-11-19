@@ -1,12 +1,12 @@
 {
   "name": "cobre-server",
-  "version": "0.4.0",
+  "version": "0.4.0-beta.1",
   "private": true,
   "description": "Aplicativo desktop do Cobre Server para identidade, dispositivos, presença e diagnóstico do ecossistema Cobre.",
   "author": "Bruno C S Moraes (com contribuições de dilucas00)",
   "engines": { "node": ">=22.13" },
   "main": "electron-main.js",
-  "scripts": { "start": "node server.js", "app": "electron .", "dist:win": "electron-builder --win nsis zip", "test": "node --test test/server.test.js" },
+  "scripts": { "start": "node server.js", "app": "electron .", "dist:win": "electron-builder --win nsis zip --publish never", "test": "node --test test/server.test.js" },
   "devDependencies": { "electron": "^45.0.0", "electron-builder": "^26.0.0" },
   "overrides": { "minimatch": "^11.0.9" },
   "build": {
