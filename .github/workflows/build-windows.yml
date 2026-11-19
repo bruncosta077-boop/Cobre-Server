@@ -32,13 +32,10 @@ jobs:
           npm run dist:win 2>&1 | Tee-Object -FilePath $logPath
           $buildExit = $LASTEXITCODE
           if ($buildExit -ne 0) {
-            $diagnostics = Get-Content -LiteralPath $logPath | Where-Object { $_ -match '(?i)(error|fatal|failed|exception|enoent|err_|command failed|not found|cannot)' } | Select-Object -Last 20
-            if (-not $diagnostics) { $diagnostics = Get-Content -LiteralPath $logPath | Select-Object -Last 20 }
-            foreach ($line in $diagnostics) {
-              $message = $line -replace [regex]::Escape($env:GITHUB_WORKSPACE), '<workspace>'
-              $message = $message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
-              Write-Output "::error title=Package diagnostic::$message"
-            }
+            $message = (Get-Content -LiteralPath $logPath -Tail 35) -join "`n"
+            $message = $message -replace [regex]::Escape($env:GITHUB_WORKSPACE), '<workspace>'
+            $message = $message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Packaging log tail::$message"
             exit $buildExit
           }
       - name: Gerar checksums SHA-256
