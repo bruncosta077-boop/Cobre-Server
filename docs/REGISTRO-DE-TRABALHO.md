@@ -16,7 +16,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - Repeti `npm ci`, os 12 testes, `npm audit` e `npm run dist:win` em uma cópia limpa com Node 22.13.0 (a mesma versão fixada no workflow); tudo passou localmente.
 - `npm run dist:win` concluiu na cópia limpa Node 22.13 após validar chave corrompida e gerou ZIP x64 (153.266.914 bytes) e instalador NSIS x64 (121.376.172 bytes). SHA-256 local: ZIP `ea1032c6430305203057d8e656eeb389a5e35724747e32320f50b000126d631f`; EXE `f30c5ebd3aed7a9ce7b39782d1ec4377db765204611e61d05f3b2e333c072a73`. O workflow publicado recalcula os hashes dos seus próprios artefatos.
 - As notas da versão dentro do app citam a validação nova e o colaborador @dilucas00.
-- O commit `4ff59b2` foi enviado a `main`; o registro foi atualizado em `9dfae90`. As execuções 44613524462 e 44615734832 falharam somente no passo de empacotamento. O build limpo local com Node 22.13 passou. A causa específica do runner ainda depende dos logs autenticados do GitHub; não publiquei release enquanto o check remoto está vermelho.
+- O código de chave corrompida foi enviado no commit `f32ba56`; o registro anterior está em `9dfae90`. As execuções 44613524462, 44615734832 e 44616970498 falharam somente no passo de empacotamento. O build limpo local com Node 22.13 passou. A causa específica do runner depende dos logs autenticados do GitHub; não publiquei release enquanto o check remoto está vermelho.
 - Colaborador registrado nos créditos: [@dilucas00](https://github.com/dilucas00).
 
 ## Estado por aplicativo
@@ -31,7 +31,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 ### Cobre Mobile
 
 - Repositório: [bruncosta077-boop/Cobre-Mobile](https://github.com/bruncosta077-boop/Cobre-Mobile), clone local em `Cobre Mobile/01 - Código-fonte/Cobre-Mobile`.
-- Versão 0.2 foi confirmada pelo autor em aparelho; 0.6 LAN foi confirmada. Build limpo recente do APK debug com JDK 17 e Gradle 8.9: 37 tarefas concluídas. O GitHub Actions do commit `e7c5653` passou; os ajustes de presença/latência, o crédito e as notas 0.7 ainda aguardam teste no aparelho.
+- Versão 0.2 foi confirmada pelo autor em aparelho; 0.6 LAN foi confirmada. O APK debug 0.7 compila com JDK 17/Gradle 8.9 (37 tarefas). As chamadas de conta e catálogo agora bloqueiam redirecionamentos; HTTP só aceita loopback/IP privado e não aceita domínio `.local`. Crédito e notas 0.7 ainda aguardam teste no aparelho. A mudança está no commit `5f24a2a`.
 - Existem biblioteca local, favoritos/histórico/playlists locais, Cobre ID, presença, fontes Desktop/LAN e reprodução em segundo plano.
 - Diferenças conhecidas para Desktop: letras sincronizadas, créditos/encartes, edição de tags, estatísticas, DSP/equalizador/crossfade e sync de playlists. Consulte `ROADMAP.md` no repo Mobile.
 - Próximo passo: testar 0.7, então escolher um recurso por vez; priorizar fila recuperável, letras/metadados e uma camada de player comum antes de duplicar a arquitetura Desktop.
