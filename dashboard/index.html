@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111110">
+  <title>Cobre Server</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand-mark">C</div>
+      <span class="rail-label">COBRE</span>
+      <span class="rail-line"></span>
+      <span class="rail-active" aria-label="Visão geral">⌂</span>
+      <span class="rail-spacer"></span>
+      <span class="rail-version">SERVER</span>
+    </aside>
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow">ECOSSISTEMA COBRE</p><h1>Cobre Server</h1></div>
+        <div class="service-state"><span class="pulse"></span><span id="service-label">Conferindo serviço</span><span class="divider"></span><span id="version">—</span></div>
+      </header>
+
+      <section class="intro">
+        <div><h2>Visão geral</h2><p>Identidade, aparelhos e presença recente do Cobre ID.</p></div>
+        <button id="refresh" class="refresh" type="button"><span>↻</span> Atualizar</button>
+      </section>
+
+      <section class="metrics" aria-label="Resumo do serviço">
+        <article class="metric"><div class="metric-head"><span>Serviço</span><span class="metric-icon">◉</span></div><strong id="api-status">—</strong><small id="uptime">Aguardando dados</small></article>
+        <article class="metric"><div class="metric-head"><span>Contas Cobre ID</span><span class="metric-icon">◎</span></div><strong id="accounts">—</strong><small>Registradas neste servidor</small></article>
+        <article class="metric"><div class="metric-head"><span>Aparelhos ativos</span><span class="metric-icon">▣</span></div><strong><span id="online">—</span><i> / </i><span id="device-count">—</span></strong><small>Heartbeat recente / vinculados</small></article>
+        <article class="metric"><div class="metric-head"><span>Resposta local</span><span class="metric-icon">⌁</span></div><strong><span id="latency">—</span><i> ms</i></strong><small>Tempo de resposta do painel à API</small></article>
+      </section>
+
+      <section class="panel devices-panel">
+        <div class="panel-heading"><div><p class="eyebrow">COBRE ID</p><h2>Aparelhos</h2></div><span id="last-update" class="muted">Aguardando atualização</span></div>
+        <div class="table-wrap"><table><thead><tr><th>Dispositivo</th><th>Tipo</th><th>Versão</th><th>Última presença</th><th>Estado</th></tr></thead><tbody id="device-rows"><tr><td colspan="5" class="empty">Carregando dispositivos…</td></tr></tbody></table></div>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel connection-panel">
+          <div class="panel-heading"><div><p class="eyebrow">REDE</p><h2>Estado da conexão</h2></div><span class="connection-mark">↗</span></div>
+          <div class="connection-row"><span class="connection-dot online-dot"></span><div><strong>Identidade e presença</strong><small>Gerenciadas pelo Cobre Server</small></div><b id="presence-summary">—</b></div>
+          <div class="connection-row"><span class="connection-dot neutral-dot"></span><div><strong>Biblioteca e áudio</strong><small>Fluxo direto do Desktop para o aparelho</small></div><b class="state-neutral">Direto</b></div>
+        </article>
+        <article class="panel note-panel">
+          <div class="panel-heading"><div><p class="eyebrow">DIAGNÓSTICO</p><h2>Streaming</h2></div><span class="metric-icon">⌁</span></div>
+          <p>Este painel não mede taxa nem latência do áudio. A mídia não passa pelo Cobre Server; essas métricas precisam ser informadas pelos clientes durante a conexão.</p>
+          <div class="note-foot"><span class="note-indicator"></span><span id="stream-note">Medição de streaming ainda não recebida</span></div>
+        </article>
+      </section>
+      <footer><span>Cobre Server · painel local</span><span>Atualização automática a cada 15 segundos</span></footer>
+    </main>
+  </div>
+</body>
+</html>

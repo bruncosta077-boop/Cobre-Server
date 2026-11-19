@@ -7,6 +7,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
+const { createDashboard } = require('./dashboard');
+const appInfo = require('./package.json');
 
 const b64u = (b) => Buffer.from(b).toString('base64url');
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
@@ -312,6 +314,20 @@ function createServer(opts = {}) {
     }
   });
   server.requestTimeout = 15_000;
+  server.dashboardSnapshot = () => {
+    const devices = db.prepare('SELECT id,name,type,created,last_seen,meta FROM devices ORDER BY last_seen DESC,created DESC').all();
+    return {
+      name: 'Cobre Server', version: appInfo.version, serverTime: now(), uptimeSeconds: Math.floor(process.uptime()),
+      onlineWindowMs: cfg.onlineWindow, accountCount: db.prepare('SELECT COUNT(*) AS count FROM users').get().count,
+      deviceCount: devices.length,
+      devices: devices.map((d) => {
+        let meta = {}; try { meta = JSON.parse(d.meta); } catch {}
+        return { id: d.id, name: d.name, type: d.type, createdAt: d.created, lastSeen: d.last_seen || null,
+          online: d.last_seen > now() - cfg.onlineWindow, appVersion: str(meta.appVersion, 32), platform: str(meta.platform, 32),
+          catalogResponseMs: Number.isFinite(meta.catalogResponseMs) ? Math.max(0, Math.round(meta.catalogResponseMs)) : null };
+      }),
+    };
+  };
   server.close_db = () => db.close();
   return server;
 }
@@ -321,13 +337,25 @@ module.exports = { createServer };
 if (require.main === module) {
   const port = Number(process.env.PORT || 8080);
   const host = process.env.HOST || '0.0.0.0';
+  const dashboardPort = Number(process.env.DASHBOARD_PORT || 8788);
   const os = require('os');
+  const { spawn } = require('child_process');
   const score = (ip) => (ip.startsWith('192.168.') ? 3 : ip.startsWith('10.') || /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2 : ip.startsWith('169.254.') ? -1 : 0);
   const lan = Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal)
     .map((a) => a.address).sort((a, b) => score(b) - score(a));
-  createServer().listen(port, host, () => {
+  const api = createServer();
+  api.listen(port, host, () => {
     console.log('Cobre ID no ar.');
     console.log('  Neste computador:  http://localhost:' + port);
     for (const ip of lan.slice(0, 3)) console.log('  No celular (mesmo Wi-Fi):  http://' + ip + ':' + port);
+    const dashboard = createDashboard(api);
+    dashboard.on('error', (e) => console.error('Painel local indisponível:', e.message));
+    dashboard.listen(dashboardPort, '127.0.0.1', () => {
+      const url = `http://127.0.0.1:${dashboardPort}`;
+      console.log('  Painel Cobre Server: ' + url + ' (somente neste computador)');
+      if (process.platform === 'win32' && process.env.OPEN_DASHBOARD !== '0') {
+        setTimeout(() => spawn('cmd.exe', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref(), 700);
+      }
+    });
   });
 }

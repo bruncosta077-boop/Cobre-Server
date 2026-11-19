@@ -2,17 +2,17 @@
 
 Marcos abaixo representam trabalho futuro, salvo itens marcados como existentes. Nenhuma fase de integração vira concluída sem validar Desktop, Mobile e TV juntos.
 
-## Versão atual — 0.2.0
+## Versão atual — 0.3.0 em desenvolvimento
 
 - [x] Contas, login e renovação de sessão.
 - [x] Dispositivos vinculados e revogáveis.
 - [x] Presença por heartbeat.
 - [x] Aprovação inicial de pareamento por código no Desktop.
+- [x] Painel local de saúde do serviço e presença dos aparelhos.
 - [ ] Solicitação e consulta de código nos clientes Mobile/TV.
 - [ ] Concessão limitada para um Desktop específico.
 - [ ] Acesso do Mobile/TV à biblioteca ou ao áudio do Desktop.
 - [ ] Medições de latência, taxa de transferência e falhas de stream.
-- [ ] Interface própria para estado dos hosts e aparelhos.
 
 ## Fase 1 — Contrato de pareamento
 
@@ -37,9 +37,9 @@ Marcos abaixo representam trabalho futuro, salvo itens marcados como existentes.
 
 ## Fase 4 — Aplicativo Cobre Server
 
-- Definir se a interface será painel web local ou aplicativo de bandeja.
-- Mostrar saúde do serviço, clientes vinculados e estado da conexão sem expor credenciais.
-- Permitir iniciar/parar o serviço e consultar logs sanitizados.
+- [x] Painel local separado da API, com saúde, contas e aparelhos/heartbeat.
+- [x] Painel restrito ao próprio computador; sem credenciais e sem áudio.
+- [ ] Iniciar/parar o serviço pelo painel e consultar logs sanitizados.
 - Documentar instalação, atualização, cópia de segurança e restauração.
 
 ## Critérios de pronto

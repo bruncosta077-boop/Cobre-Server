@@ -1,8 +1,8 @@
 {
   "name": "cobre-server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Cobre ID: contas, dispositivos, sessoes e presenca. Sem dependencias externas.",
+  "description": "Cobre Server: identidade Cobre ID, dispositivos, presença e painel local de conexão.",
   "engines": { "node": ">=22.13" },
-  "scripts": { "start": "node server.js", "test": "node --test test/server.test.js" }
+  "scripts": { "start": "node server.js", "app": "node server.js", "test": "node --test test/server.test.js" }
 }

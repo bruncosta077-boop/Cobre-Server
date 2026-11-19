@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Cobre ID - servidor
+title Cobre Server - API e painel local
 cd /d "%~dp0"
 
 where node >nul 2>nul
@@ -36,12 +36,12 @@ pause
 exit /b 0
 
 :rodar
-echo Se o Windows perguntar sobre o Firewall, clique em PERMITIR.
-echo Deixe esta janela aberta (pode minimizar). Para parar, feche-a.
+echo Se o Windows perguntar sobre o Firewall, clique em PERMITIR para que os aparelhos alcancem o Cobre ID.
+echo O painel local abre no navegador. Deixe esta janela aberta; para parar, feche-a.
 echo.
 :loop
 node server.js
 echo.
-echo O servidor parou. Reiniciando em 3 segundos...
+echo O serviço parou. Reiniciando em 3 segundos...
 timeout /t 3 /nobreak >nul
 goto loop
