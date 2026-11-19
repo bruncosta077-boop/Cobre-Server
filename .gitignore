@@ -1,0 +1,11 @@
+# Never publish live accounts, refresh tokens, or signing secrets.
+data/*
+!data/.gitkeep
+node_modules/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+Thumbs.db
+.DS_Store
