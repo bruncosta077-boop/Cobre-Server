@@ -17,6 +17,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - `npm run dist:win` concluiu na cópia limpa Node 22.13 após validar chave corrompida e gerou ZIP x64 (153.266.914 bytes) e instalador NSIS x64 (121.376.172 bytes). SHA-256 local: ZIP `ea1032c6430305203057d8e656eeb389a5e35724747e32320f50b000126d631f`; EXE `f30c5ebd3aed7a9ce7b39782d1ec4377db765204611e61d05f3b2e333c072a73`. O workflow publicado recalcula os hashes dos seus próprios artefatos.
 - As notas da versão dentro do app citam a validação nova e o colaborador @dilucas00.
 - O código de chave corrompida foi enviado no commit `f32ba56`; o registro anterior está em `9dfae90`. As execuções 44613524462, 44615734832 e 44616970498 falharam somente no passo de empacotamento. O build limpo local com Node 22.13 passou. A causa específica do runner depende dos logs autenticados do GitHub; não publiquei release enquanto o check remoto está vermelho.
+- A execução 44617773153 também falhou no passo `npm run dist:win`; API pública confirma apenas `Process completed with exit code 1`. Testes, auditoria e instalação das dependências passaram no runner. O log detalhado continua inacessível sem autenticação; não alterei o workflow por tentativa.
 - Colaborador registrado nos créditos: [@dilucas00](https://github.com/dilucas00).
 
 ## Estado por aplicativo
@@ -26,12 +27,12 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - Repositório: [bruncosta077-boop/Cobre](https://github.com/bruncosta077-boop/Cobre), clone completo do app.
 - Versão pública 3.5.0; código 3.6.0 em validação. Atualizados music-metadata (corrigindo parser ASF vulnerável), electron-builder e minimatch; `npm audit` indica zero vulnerabilidades conhecidas na árvore Desktop atual.
 - ZIP x64 (153.710.838 bytes), instalador (121.779.176 bytes) e pacote portátil de atualização 3.6.0 (698.768 bytes) foram gerados localmente. Manifesto, limites e caminhos do pacote de atualização foram verificados. SHA-256: ZIP `1c07887bb905b512f73f36998fd7afb137fe056be014edb874a9c430c078b971`; EXE `96665ace9e8af1594e47f700da10f4856c5857f2f69d602dad7fdbf89e1d250d`; atualização `a926d4db408b3b907636bc97033653fbb90cca4d4cbfd2fc70ed046eebd5015a`. Ainda falta validar a execução no aplicativo/aparelho e publicar.
-- README mostra logo, captura e download público 3.5.0; “Sobre” cita @dilucas00. Changelog 3.6.0 e correções de segurança foram enviados no commit `9b425a3`; pacote local gerado, validação funcional e publicação ainda pendentes.
+- README mostra logo, captura e download público 3.5.0; “Sobre” cita @dilucas00. Changelog 3.6.0 e correções de segurança estão no commit `9b425a3`; o commit `1ad0e7e` documenta que o acesso remoto usa HTTP e que o endereço com chave deve ser tratado como senha. Pacote local gerado, validação funcional e publicação ainda pendentes.
 
 ### Cobre Mobile
 
 - Repositório: [bruncosta077-boop/Cobre-Mobile](https://github.com/bruncosta077-boop/Cobre-Mobile), clone local em `Cobre Mobile/01 - Código-fonte/Cobre-Mobile`.
-- Versão 0.2 foi confirmada pelo autor em aparelho; 0.6 LAN foi confirmada. O APK debug 0.7 compila com JDK 17/Gradle 8.9 (37 tarefas). As chamadas de conta e catálogo agora bloqueiam redirecionamentos; HTTP só aceita loopback/IP privado e não aceita domínio `.local`. Crédito e notas 0.7 ainda aguardam teste no aparelho. A mudança está no commit `5f24a2a`.
+- Versão 0.2 foi confirmada pelo autor em aparelho; 0.6 LAN foi confirmada. O APK debug 0.7 compila com JDK 17/Gradle 8.9 (37 tarefas), e o GitHub Actions para o commit `5f24a2a` concluiu com sucesso. As chamadas de conta e catálogo bloqueiam redirecionamentos; HTTP só aceita loopback/IP privado e não aceita domínio `.local`. Crédito e notas 0.7 ainda aguardam teste no aparelho.
 - Existem biblioteca local, favoritos/histórico/playlists locais, Cobre ID, presença, fontes Desktop/LAN e reprodução em segundo plano.
 - Diferenças conhecidas para Desktop: letras sincronizadas, créditos/encartes, edição de tags, estatísticas, DSP/equalizador/crossfade e sync de playlists. Consulte `ROADMAP.md` no repo Mobile.
 - Próximo passo: testar 0.7, então escolher um recurso por vez; priorizar fila recuperável, letras/metadados e uma camada de player comum antes de duplicar a arquitetura Desktop.
