@@ -1,5 +1,13 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.7 — base de autorização por Desktop
+
+- Mobile/TV podem abrir uma solicitação de acesso a um Desktop específico; o Desktop autenticado lista os pedidos e aprova ou recusa cada um.
+- Aprovação emite uma permissão assinada, curta e limitada por escopos. O host pode validar e revogar concessões; a central lista concessões ativas por conta.
+- Pedidos expiram e são limitados por aparelho. Solicitações e concessões ficam vinculadas à conta, ao cliente e ao host, e a remoção de um aparelho invalida o acesso.
+- A API está implementada no Server, mas a integração do fluxo no Desktop e Mobile e a aplicação dos escopos à biblioteca/áudio ainda estão pendentes.
+- Inclui testes de aprovação/recusa pelo host, expiração, revogação, tentativa cruzada entre hosts e metadados de concessão.
+
 ## 0.5.0-beta.6 — atualizador resiliente ao limite do GitHub
 
 - Quando a API pública do GitHub responde com limite de consultas, o atualizador usa o feed Atom oficial de releases como alternativa.

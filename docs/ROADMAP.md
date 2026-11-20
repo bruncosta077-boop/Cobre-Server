@@ -10,7 +10,7 @@
 - [x] Painel de estado, contas, dispositivos, filtros, portas e pasta de dados.
 - [x] Workflow do GitHub Actions para gerar ZIP portátil e instalador Windows.
 - [x] Exportar/restaurar uma cópia criptografada da base e chave, com validação e cópia de recuperação.
-- [ ] Concessão de acesso limitada a cada Desktop host.
+- [ ] Concessão de acesso limitada a cada Desktop host (API preparada localmente; integração cliente e publicação pendentes).
 - [ ] Acesso autorizado do Mobile/TV à biblioteca e ao áudio do Desktop.
 - [x] Receber e exibir taxa e latência inicial do stream reportadas pelo Mobile, separadas de presença e latência do catálogo.
 - [ ] Métricas de erros do Desktop, suporte equivalente na TV e validação integrada em uso real.
@@ -22,11 +22,15 @@
 
 ## Próximos marcos de integração
 
-1. Validar pareamento e revogação entre aparelhos reais; corrigir diferenças de rede e versões encontradas.
-2. Identificar cada Desktop host e emitir uma permissão curta, limitada e revogável.
-3. Integrar autorização Cobre ID ao acesso de biblioteca e áudio do Desktop.
+1. Integrar as rotas de solicitação/aprovação/revogação de host ao Desktop e ao Mobile; a API foi preparada localmente, mas os aplicativos ainda não a consomem.
+2. Aplicar e validar a permissão curta no catálogo, nos controles de playback e no endpoint de áudio do Desktop.
+3. Validar pareamento e revogação entre aparelhos reais; corrigir diferenças de rede e versões encontradas.
 4. Concluir biblioteca e playback reais na TV, mantendo o áudio direto entre Desktop e aparelho.
 5. Validar em aparelhos reais certificado confiável, URLs e login Cobre ID via HTTPS antes de uso fora de uma LAN confiável.
+
+## Itens anotados para evolução
+
+- Perfil Cobre ID: mostrar com clareza qual conta está conectada, exibir seus dados básicos e permitir editar os campos de perfil suportados. Ainda não implementado; será trabalhado depois da integração e estabilização do acesso autorizado ao Desktop.
 
 ## Aplicativo Cobre Server
 

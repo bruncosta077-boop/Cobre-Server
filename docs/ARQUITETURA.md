@@ -12,7 +12,7 @@ O áudio deve sair diretamente do Desktop para o aparelho pela rede local. O Cob
 
 O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e oferece endpoints para solicitar um código de TV e aprová-lo por outro dispositivo autenticado. O Mobile implementa a aprovação; o TV 0.2.0 solicita e resgata o código, guardando o refresh token no Android Keystore. Os clientes compilam, mas o pareamento ainda não foi validado em aparelhos reais. O registro de presença informa somente que um aparelho enviou um heartbeat recentemente.
 
-O servidor local embutido no Desktop ainda usa seu próprio contrato de biblioteca e streaming. A integração por Cobre ID ainda não concede a um Mobile/TV acesso a um Desktop específico. A TV permanece com biblioteca de demonstração e sem reprodução de áudio.
+O servidor local embutido no Desktop ainda usa seu próprio contrato de biblioteca e streaming. No Server, a API de concessão por host está sendo preparada: o Mobile solicita acesso, o Desktop autenticado lista e aprova/recusa o pedido, o Mobile recebe uma permissão curta e o host pode validá-la ou revogá-la. Essa base ainda não está integrada ao Desktop/Mobile; portanto, ela não concede acesso ao catálogo ou ao áudio até os clientes chamarem e aplicarem as rotas. A TV permanece com biblioteca de demonstração e sem reprodução de áudio.
 
 O Cobre Server é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio dependem de medições reportadas pelos clientes. A partir da 0.5.0-beta.1, a interface exporta e restaura a base e a chave em um arquivo autenticado e criptografado por senha.
 
@@ -34,7 +34,7 @@ Uma presença `online` sozinha não é evidência de que o Desktop aceita stream
 ## Segurança
 
 - Tokens curtos e renovação rotativa ficam limitados ao dispositivo autenticado.
-- Cada concessão de acesso deve apontar para um Desktop específico e ser revogável.
+- Cada concessão de acesso aponta para um Desktop específico, carrega escopos, expira e pode ser revogada no Server. O Desktop ainda precisa validar a permissão em cada rota protegida.
 - Nenhum segredo do servidor deve ser enviado a clientes.
 - Credenciais não devem aparecer em query strings ou logs.
 - HTTPS é obrigatório para qualquer instância acessível pela internet.

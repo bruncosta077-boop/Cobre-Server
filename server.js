@@ -15,7 +15,6 @@ const appInfo = require('./package.json');
 
 const b64u = (b) => Buffer.from(b).toString('base64url');
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
-const now = () => Date.now();
 
 function isLanAddress(raw) {
   const address = String(raw || '').toLowerCase().split('%')[0];
@@ -42,6 +41,7 @@ function isLanAddress(raw) {
 }
 
 function createServer(opts = {}) {
+  const now = typeof opts.now === 'function' ? opts.now : () => Date.now();
   const cfg = {
     dataDir: opts.dataDir || process.env.DATA_DIR || path.join(__dirname, 'data'),
     accessTtl: opts.accessTtl ?? Number(process.env.ACCESS_TTL || 600),          // segundos
@@ -71,8 +71,22 @@ function createServer(opts = {}) {
       name TEXT NOT NULL, type TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending', user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
       device_id TEXT REFERENCES devices(id) ON DELETE CASCADE, last_poll INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS host_access_grants(id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+      host_device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+      scopes TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS host_access_requests(id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+      host_device_id TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+      scopes TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending', grant_id TEXT REFERENCES host_access_grants(id) ON DELETE CASCADE);
     CREATE INDEX IF NOT EXISTS ix_dev_user ON devices(user_id);
     CREATE INDEX IF NOT EXISTS ix_device_codes_exp ON device_codes(expires);
+    CREATE INDEX IF NOT EXISTS ix_host_grants_host ON host_access_grants(host_device_id,expires);
+    CREATE INDEX IF NOT EXISTS ix_host_grants_client ON host_access_grants(client_device_id,expires);
+    CREATE INDEX IF NOT EXISTS ix_host_requests_exp ON host_access_requests(expires);
   `);
   const q = {
     userByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
@@ -81,6 +95,7 @@ function createServer(opts = {}) {
     addDevice: db.prepare('INSERT INTO devices(id,user_id,name,type,created,last_seen) VALUES(?,?,?,?,?,?)'),
     device: db.prepare('SELECT * FROM devices WHERE id = ?'),
     devicesOf: db.prepare('SELECT * FROM devices WHERE user_id = ? ORDER BY created'),
+    hostsOf: db.prepare("SELECT * FROM devices WHERE user_id = ? AND type = 'desktop' ORDER BY created"),
     delDevice: db.prepare('DELETE FROM devices WHERE id = ? AND user_id = ?'),
     seen: db.prepare('UPDATE devices SET last_seen = ?, meta = ? WHERE id = ?'),
     addRef: db.prepare('INSERT INTO refresh(hash,device_id,expires) VALUES(?,?,?)'),
@@ -95,6 +110,21 @@ function createServer(opts = {}) {
     denyDeviceCode: db.prepare("UPDATE device_codes SET status = 'denied', user_id = ? WHERE code_hash = ? AND status = 'pending'"),
     pollDeviceCode: db.prepare('UPDATE device_codes SET last_poll = ? WHERE code_hash = ?'),
     consumeDeviceCode: db.prepare("DELETE FROM device_codes WHERE code_hash = ? AND status = 'redeemed'"),
+    addHostRequest: db.prepare('INSERT INTO host_access_requests(id,user_id,client_device_id,host_device_id,scopes,created,expires) VALUES(?,?,?,?,?,?,?)'),
+    hostRequest: db.prepare('SELECT * FROM host_access_requests WHERE id = ?'),
+    pendingHostRequests: db.prepare(`SELECT r.id,r.client_device_id,r.scopes,r.created,r.expires,d.name AS client_name,d.type AS client_type
+      FROM host_access_requests r JOIN devices d ON d.id=r.client_device_id
+      WHERE r.host_device_id=? AND r.user_id=? AND r.status='pending' AND r.expires>=? ORDER BY r.created`),
+    approveHostRequest: db.prepare("UPDATE host_access_requests SET status='redeemed',grant_id=?,expires=? WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
+    denyHostRequest: db.prepare("UPDATE host_access_requests SET status='denied' WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
+    addHostGrant: db.prepare('INSERT INTO host_access_grants(id,user_id,client_device_id,host_device_id,scopes,created,expires) VALUES(?,?,?,?,?,?,?)'),
+    hostGrant: db.prepare('SELECT * FROM host_access_grants WHERE id = ?'),
+    hostGrantsOfUser: db.prepare(`SELECT g.id,g.client_device_id,g.host_device_id,g.scopes,g.created,g.expires,c.name AS client_name,h.name AS host_name
+      FROM host_access_grants g JOIN devices c ON c.id=g.client_device_id JOIN devices h ON h.id=g.host_device_id
+      WHERE g.user_id=? AND g.revoked=0 AND g.expires>? ORDER BY g.created DESC`),
+    revokeHostGrant: db.prepare('UPDATE host_access_grants SET revoked=1 WHERE id=? AND user_id=? AND host_device_id=? AND revoked=0'),
+    purgeHostRequests: db.prepare('DELETE FROM host_access_requests WHERE expires < ?'),
+    purgeHostGrants: db.prepare('DELETE FROM host_access_grants WHERE expires < ? OR revoked != 0'),
   };
   const transaction = (fn) => {
     db.exec('BEGIN IMMEDIATE');
@@ -144,6 +174,28 @@ function createServer(opts = {}) {
       return p;
     } catch { return null; }
   };
+  const signHostGrant = (grant) => {
+    const head = b64u(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const body = b64u(JSON.stringify({ iss: 'cobre-server', aud: grant.host_device_id, sub: grant.client_device_id,
+      uid: grant.user_id, jti: grant.id, scope: JSON.parse(grant.scopes), exp: Math.floor(grant.expires / 1000) }));
+    const sig = crypto.createHmac('sha256', SECRET).update(`${head}.${body}`).digest('base64url');
+    return `${head}.${body}.${sig}`;
+  };
+  const verifyHostGrant = (token) => {
+    const parts = String(token || '').split('.');
+    if (parts.length !== 3) return null;
+    const want = crypto.createHmac('sha256', SECRET).update(`${parts[0]}.${parts[1]}`).digest();
+    const got = Buffer.from(parts[2], 'base64url');
+    if (got.length !== want.length || !crypto.timingSafeEqual(got, want)) return null;
+    try {
+      const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      if (header.alg !== 'HS256' || header.typ !== 'JWT' || payload.iss !== 'cobre-server' ||
+          typeof payload.aud !== 'string' || typeof payload.sub !== 'string' || typeof payload.uid !== 'string' ||
+          typeof payload.jti !== 'string' || !Array.isArray(payload.scope) || !payload.exp || payload.exp * 1000 < now()) return null;
+      return payload;
+    } catch { return null; }
+  };
   const newRefresh = (did) => {
     const tok = crypto.randomBytes(32).toString('base64url');
     q.addRef.run(sha(tok), did, now() + cfg.refreshTtl * 1000);
@@ -157,6 +209,7 @@ function createServer(opts = {}) {
   // ---- limite de tentativas (memória; reinicia com o processo) ----
   const fails = new Map();
   const deviceStarts = new Map();
+  const hostAccessStarts = new Map();
   const failKey = (k) => { const e = fails.get(k); if (!e || e.reset < now()) { fails.set(k, { n: 0, reset: now() + 15 * 60_000 }); } return fails.get(k); };
   const blocked = (k, max) => { const e = fails.get(k); return e && e.reset >= now() && e.n >= max ? Math.ceil((e.reset - now()) / 1000) : 0; };
   const addFail = (k) => { failKey(k).n++; };
@@ -174,7 +227,7 @@ function createServer(opts = {}) {
     if (typeof source.desktopHostActive === 'boolean') out.desktopHostActive = source.desktopHostActive;
     return out;
   };
-  setInterval(() => { for (const [k, e] of fails) if (e.reset < now()) fails.delete(k); for (const [k, t] of deviceStarts) if (t < now() - 15 * 60_000) deviceStarts.delete(k); q.purge.run(now()); db.prepare('DELETE FROM device_codes WHERE expires < ?').run(now()); }, 600_000).unref();
+  setInterval(() => { for (const [k, e] of fails) if (e.reset < now()) fails.delete(k); for (const [k, t] of deviceStarts) if (t < now() - 15 * 60_000) deviceStarts.delete(k); for (const [k, t] of hostAccessStarts) if (t < now() - 60_000) hostAccessStarts.delete(k); q.purge.run(now()); db.prepare('DELETE FROM device_codes WHERE expires < ?').run(now()); q.purgeHostRequests.run(now()); q.purgeHostGrants.run(now()); }, 600_000).unref();
 
   // ---- util HTTP ----
   class HttpError extends Error { constructor(status, error, message, extra) { super(message); this.status = status; this.error = error; this.extra = extra; } }
@@ -231,6 +284,19 @@ function createServer(opts = {}) {
     }
     throw new HttpError(503, 'code_unavailable', 'Não foi possível gerar um código agora. Tente novamente.');
   };
+  const HOST_GRANT_TTL = opts.hostGrantTtl ?? 10 * 60_000, HOST_REQUEST_TTL = opts.hostRequestTtl ?? 90_000;
+  const HOST_SCOPES = new Set(['library.read', 'playback.read', 'playback.control', 'stream']);
+  const hostScopes = (value) => {
+    if (value === undefined) return ['library.read', 'playback.read', 'stream'];
+    if (!Array.isArray(value) || value.length < 1 || value.length > HOST_SCOPES.size ||
+        value.some((scope) => typeof scope !== 'string' || !HOST_SCOPES.has(scope)) || new Set(value).size !== value.length) {
+      throw new HttpError(400, 'bad_scopes', 'Permissões do Desktop inválidas.');
+    }
+    return [...HOST_SCOPES].filter((scope) => value.includes(scope));
+  };
+  const deviceMeta = (device) => { try { return JSON.parse(device?.meta || '{}'); } catch { return {}; } };
+  const onlineDesktop = (device) => device?.type === 'desktop' && device.last_seen > now() - cfg.onlineWindow;
+  const hostView = (device) => ({ ...view(device, null), online: onlineDesktop(device), streamActive: deviceMeta(device).desktopHostActive === true });
 
   const routes = {
     'GET /health': async () => [200, { ok: true }],
@@ -293,11 +359,34 @@ function createServer(opts = {}) {
       return [200, { devices: q.devicesOf.all(a.uid).map((d) => view(d, a.did)) }];
     },
 
+    'GET /v1/hosts': async (req) => {
+      const a = auth(req);
+      const accessGrants = q.hostGrantsOfUser.all(a.uid, now()).map((grant) => ({ grantId: grant.id,
+        clientDeviceId: grant.client_device_id, clientName: grant.client_name, hostDeviceId: grant.host_device_id,
+        hostName: grant.host_name, scopes: JSON.parse(grant.scopes), createdAt: grant.created, expiresAt: grant.expires }));
+      return [200, { hosts: q.hostsOf.all(a.uid).map(hostView), accessGrants }];
+    },
+
     'POST /v1/presence': async (req, body) => {
       const a = auth(req);
       const meta = JSON.stringify(presenceMeta(body.meta));
       q.seen.run(now(), meta, a.did);
       return [200, { ok: true, serverTime: now() }];
+    },
+
+    'POST /v1/hosts/access-grants/validate': async (req, body) => {
+      const a = auth(req), claims = verifyHostGrant(body.grantToken);
+      if (!claims || claims.aud !== a.did) throw new HttpError(401, 'invalid_host_grant', 'A autorização não corresponde a este Desktop ou expirou.');
+      const grant = q.hostGrant.get(claims.jti), client = q.device.get(claims.sub), host = q.device.get(a.did);
+      if (!grant || grant.revoked || grant.expires < now() || grant.host_device_id !== a.did ||
+          grant.client_device_id !== claims.sub || grant.user_id !== a.uid || claims.uid !== a.uid ||
+          !client || client.user_id !== a.uid || !['mobile', 'tv'].includes(client.type) || !host || host.type !== 'desktop') {
+        throw new HttpError(401, 'host_grant_revoked', 'A autorização foi removida ou expirou.');
+      }
+      const scopes = JSON.parse(grant.scopes);
+      if (JSON.stringify(scopes) !== JSON.stringify(claims.scope)) throw new HttpError(401, 'invalid_host_grant', 'As permissões da autorização foram alteradas.');
+      return [200, { active: true, grantId: grant.id, hostDeviceId: grant.host_device_id,
+        clientDeviceId: grant.client_device_id, scopes, expiresAt: grant.expires }];
     },
 
     // TV requests a short-lived code, then an already authenticated Cobre app approves it.
@@ -380,6 +469,89 @@ function createServer(opts = {}) {
           if (!target || target.user_id !== a.uid) throw new HttpError(404, 'not_found', 'Dispositivo não encontrado.');
           q.delDevice.run(param, a.uid);
           return [200, { ok: true }];
+        };
+      }
+      const hostRequestCreate = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests$/.exec(url.pathname);
+      const hostRequestsList = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests$/.exec(url.pathname);
+      const hostRequestApprove = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests\/([0-9a-f-]{36})\/approve$/.exec(url.pathname);
+      const hostRequestDeny = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests\/([0-9a-f-]{36})\/deny$/.exec(url.pathname);
+      const hostRequestPoll = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests\/([0-9a-f-]{36})$/.exec(url.pathname);
+      const hostGrantDelete = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-grants\/([0-9a-f-]{36})$/.exec(url.pathname);
+      if (!handler && req.method === 'POST' && hostRequestCreate) {
+        handler = async (rq, body) => {
+          const a = auth(rq), client = q.device.get(a.did), host = q.device.get(hostRequestCreate[1]);
+          if (!client || !['mobile', 'tv'].includes(client.type)) throw new HttpError(403, 'bad_client', 'Somente Mobile ou TV podem pedir acesso a um Desktop.');
+          if (!host || host.user_id !== a.uid || host.type !== 'desktop') throw new HttpError(404, 'host_not_found', 'Desktop não encontrado nesta conta.');
+          if (!onlineDesktop(host)) throw new HttpError(409, 'host_offline', 'Este Desktop não está conectado ao Cobre ID agora.');
+          const starts = (hostAccessStarts.get(a.did) || []).filter((at) => at > now() - 60_000);
+          if (starts.length >= 10) throw new HttpError(429, 'rate_limited', 'Muitas solicitações de acesso. Aguarde um minuto.', { retryAfter: Math.ceil((starts[0] + 60_000 - now()) / 1000) });
+          starts.push(now()); hostAccessStarts.set(a.did, starts);
+          const requestId = crypto.randomUUID();
+          const created = now(), expires = created + HOST_REQUEST_TTL, scopes = hostScopes(body.scopes);
+          q.addHostRequest.run(requestId, a.uid, a.did, host.id, JSON.stringify(scopes), created, expires);
+          return [201, { requestId, expiresIn: Math.floor(HOST_REQUEST_TTL / 1000), hostDeviceId: host.id, scopes }];
+        };
+      }
+      if (!handler && req.method === 'GET' && hostRequestsList) {
+        handler = async (rq, body) => {
+          const a = auth(rq), host = q.device.get(a.did);
+          if (a.did !== hostRequestsList[1] || !host || host.type !== 'desktop') throw new HttpError(403, 'host_mismatch', 'Somente o Desktop indicado pode consultar as solicitações.');
+          return [200, { requests: q.pendingHostRequests.all(host.id, a.uid, now()).map((request) => ({
+            requestId: request.id, clientDeviceId: request.client_device_id, clientName: request.client_name,
+            clientType: request.client_type, scopes: JSON.parse(request.scopes), createdAt: request.created,
+            expiresAt: request.expires,
+          })) }];
+        };
+      }
+      if (!handler && req.method === 'POST' && (hostRequestApprove || hostRequestDeny)) {
+        handler = async (rq) => {
+          const route = hostRequestApprove || hostRequestDeny, a = auth(rq), host = q.device.get(a.did);
+          if (a.did !== route[1] || !host || host.type !== 'desktop') throw new HttpError(403, 'host_mismatch', 'Somente o Desktop indicado pode responder à solicitação.');
+          if (hostRequestDeny) {
+            const denied = q.denyHostRequest.run(route[2], host.id, a.uid, now());
+            if (denied.changes !== 1) throw new HttpError(404, 'access_request_not_found', 'Solicitação não encontrada ou expirada.');
+            return [200, { status: 'denied', requestId: route[2] }];
+          }
+          const grant = transaction(() => {
+            const request = q.hostRequest.get(route[2]);
+            if (!request || request.host_device_id !== host.id || request.user_id !== a.uid || request.status !== 'pending' || request.expires < now()) {
+              throw new HttpError(404, 'access_request_not_found', 'A solicitação expirou, já foi usada ou pertence a outro Desktop.');
+            }
+            const client = q.device.get(request.client_device_id);
+            if (!client || client.user_id !== a.uid || !['mobile', 'tv'].includes(client.type)) throw new HttpError(410, 'client_revoked', 'O aparelho solicitante foi removido da conta.');
+            const id = crypto.randomUUID(), created = now(), expires = created + HOST_GRANT_TTL;
+            q.addHostGrant.run(id, a.uid, client.id, host.id, request.scopes, created, expires);
+            const updated = q.approveHostRequest.run(id, expires, request.id, host.id, a.uid, now());
+            if (updated.changes !== 1) throw new HttpError(404, 'access_request_not_found', 'A solicitação expirou ou já foi usada.');
+            return q.hostGrant.get(id);
+          });
+          return [200, { status: 'approved', grantId: grant.id, expiresIn: Math.floor(HOST_GRANT_TTL / 1000),
+            hostDeviceId: grant.host_device_id, clientDeviceId: grant.client_device_id, scopes: JSON.parse(grant.scopes) }];
+        };
+      }
+      if (!handler && req.method === 'GET' && hostRequestPoll) {
+        handler = async (rq) => {
+          const a = auth(rq), request = q.hostRequest.get(hostRequestPoll[2]);
+          if (!request || request.host_device_id !== hostRequestPoll[1] || request.user_id !== a.uid || request.client_device_id !== a.did) {
+            throw new HttpError(404, 'access_request_not_found', 'Solicitação de acesso não encontrada.');
+          }
+          if (request.expires < now()) throw new HttpError(410, 'access_request_expired', 'A solicitação de acesso expirou.');
+          if (request.status === 'pending') return [200, { status: 'pending', expiresAt: request.expires }];
+          if (request.status === 'denied') throw new HttpError(403, 'access_request_denied', 'O Desktop recusou esta solicitação.');
+          if (request.status !== 'redeemed') throw new HttpError(410, 'access_request_expired', 'A solicitação de acesso não está mais ativa.');
+          const grant = q.hostGrant.get(request.grant_id);
+          if (!grant || grant.revoked || grant.expires < now()) throw new HttpError(410, 'host_grant_revoked', 'A autorização foi removida ou expirou.');
+          return [200, { status: 'redeemed', grantId: grant.id, grantToken: signHostGrant(grant), expiresAt: grant.expires,
+            hostDeviceId: grant.host_device_id, scopes: JSON.parse(grant.scopes) }];
+        };
+      }
+      if (!handler && req.method === 'DELETE' && hostGrantDelete) {
+        handler = async (rq) => {
+          const a = auth(rq), host = q.device.get(hostGrantDelete[1]);
+          if (!host || host.user_id !== a.uid || host.type !== 'desktop') throw new HttpError(404, 'host_not_found', 'Desktop não encontrado nesta conta.');
+          const revoked = q.revokeHostGrant.run(hostGrantDelete[2], a.uid, host.id);
+          if (revoked.changes !== 1) throw new HttpError(404, 'host_grant_not_found', 'Autorização ativa não encontrada.');
+          return [200, { ok: true, grantId: hostGrantDelete[2] }];
         };
       }
       if (!handler) throw new HttpError(404, 'not_found', 'Rota não encontrada.');

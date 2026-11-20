@@ -147,6 +147,102 @@ test('presença: online logo após heartbeat, offline depois da janela', async (
   assert.equal(l.body.devices.find((d) => d.id === pc.body.device.id).online, false);
 });
 
+test('acesso ao Desktop é aprovado pelo host, limitado, listável e revogável', async () => {
+  const account = await call('POST', '/v1/register', { email: 'host-grants@teste.com', password: 'senha-forte-3', device: PC });
+  const hostToken = account.body.accessToken, hostId = account.body.device.id;
+  const secondHost = await call('POST', '/v1/login', { email: 'host-grants@teste.com', password: 'senha-forte-3', device: { name: 'Segundo PC', type: 'desktop' } });
+  const mobile = await call('POST', '/v1/login', { email: 'host-grants@teste.com', password: 'senha-forte-3', device: { name: 'Celular de teste', type: 'mobile' } });
+  const active = { meta: { platform: 'Windows', appVersion: '1.0.0', desktopHostActive: true } };
+  await call('POST', '/v1/presence', active, hostToken);
+  await call('POST', '/v1/presence', active, secondHost.body.accessToken);
+
+  const hosts = await call('GET', '/v1/hosts', null, mobile.body.accessToken);
+  assert.deepEqual(hosts.body.hosts.map((host) => host.id), [hostId, secondHost.body.device.id]);
+  assert.equal(hosts.body.hosts.find((host) => host.id === hostId).online, true);
+  assert.equal(hosts.body.hosts.find((host) => host.id === hostId).streamActive, true);
+
+  const outsider = await call('POST', '/v1/register', { email: 'host-outsider@teste.com', password: 'senha-forte-4', device: PC });
+  await call('POST', '/v1/presence', active, outsider.body.accessToken);
+  assert.equal((await call('POST', `/v1/hosts/${outsider.body.device.id}/access-requests`, {}, mobile.body.accessToken)).status, 404);
+  assert.equal((await call('POST', `/v1/hosts/${hostId}/access-requests`, { scopes: ['admin'] }, mobile.body.accessToken)).body.error, 'bad_scopes');
+
+  const path = `/v1/hosts/${hostId}/access-requests`;
+  const request = await call('POST', path, { scopes: ['stream', 'library.read', 'playback.control'] }, mobile.body.accessToken);
+  assert.equal(request.status, 201);
+  const pollPath = `${path}/${request.body.requestId}`;
+  assert.equal((await call('GET', pollPath, null, mobile.body.accessToken)).body.status, 'pending');
+  assert.equal((await call('GET', pollPath, null, secondHost.body.accessToken)).status, 404);
+  assert.equal((await call('GET', `/v1/hosts/${secondHost.body.device.id}/access-requests`, null, secondHost.body.accessToken)).body.requests.length, 0);
+
+  const inboxPath = `/v1/hosts/${hostId}/access-requests`;
+  const inbox = await call('GET', inboxPath, null, hostToken);
+  assert.equal(inbox.body.requests.length, 1);
+  assert.equal(inbox.body.requests[0].clientName, 'Celular de teste');
+  const approvePath = `${inboxPath}/${request.body.requestId}/approve`;
+  assert.equal((await call('POST', `${`/v1/hosts/${secondHost.body.device.id}/access-requests`}/${request.body.requestId}/approve`, {}, secondHost.body.accessToken)).status, 404);
+  const approved = await call('POST', approvePath, {}, hostToken);
+  assert.equal(approved.body.status, 'approved');
+  const redeemed = await call('GET', pollPath, null, mobile.body.accessToken);
+  assert.equal(redeemed.status, 200);
+  assert.deepEqual(redeemed.body.scopes, ['library.read', 'playback.control', 'stream']);
+  assert.equal((await call('POST', approvePath, {}, hostToken)).status, 404);
+  const ready = await call('GET', pollPath, null, mobile.body.accessToken);
+  assert.equal(ready.body.status, 'redeemed');
+
+  const validate = await call('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, hostToken);
+  assert.equal(validate.status, 200);
+  assert.equal(validate.body.clientDeviceId, mobile.body.device.id);
+  assert.deepEqual(validate.body.scopes, redeemed.body.scopes);
+  const grants = await call('GET', '/v1/hosts', null, mobile.body.accessToken);
+  assert.equal(grants.body.accessGrants.length, 1);
+  assert.equal(grants.body.accessGrants[0].grantId, validate.body.grantId);
+  assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, secondHost.body.accessToken)).status, 401);
+  assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: `${redeemed.body.grantToken}x` }, hostToken)).status, 401);
+
+  const revokePath = `/v1/hosts/${hostId}/access-grants/${validate.body.grantId}`;
+  assert.equal((await call('DELETE', revokePath, null, mobile.body.accessToken)).status, 200);
+  assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, hostToken)).body.error, 'host_grant_revoked');
+
+  const nextRequest = await call('POST', path, {}, mobile.body.accessToken);
+  const nextRequestId = nextRequest.body.requestId;
+  assert.equal((await call('POST', `${path}/${nextRequestId}/deny`, {}, hostToken)).body.status, 'denied');
+  assert.equal((await call('GET', `${path}/${nextRequestId}`, null, mobile.body.accessToken)).body.error, 'access_request_denied');
+  const afterRevoke = await call('POST', path, {}, mobile.body.accessToken);
+  await call('POST', `${path}/${afterRevoke.body.requestId}/approve`, {}, hostToken);
+  const nextGrant = await call('GET', `${path}/${afterRevoke.body.requestId}`, null, mobile.body.accessToken);
+  assert.equal((await call('DELETE', `/v1/devices/${mobile.body.device.id}`, null, hostToken)).status, 200);
+  assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: nextGrant.body.grantToken }, hostToken)).body.error, 'host_grant_revoked');
+});
+
+test('concessão temporária ao Desktop expira e deixa de ser validada', async (t) => {
+  const expiryDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cobre-host-grant-expiry-'));
+  t.after(() => fs.rmSync(expiryDir, { recursive: true, force: true }));
+  let clock = Date.now();
+  const expiryServer = createServer({ dataDir: expiryDir, accessTtl: 3600, hostGrantTtl: 1000, now: () => clock });
+  await new Promise((ok) => expiryServer.listen(0, '127.0.0.1', ok));
+  const local = 'http://127.0.0.1:' + expiryServer.address().port;
+  const localCall = async (method, url, body, token) => {
+    const response = await fetch(local + url, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    return { status: response.status, body: await response.json() };
+  };
+  try {
+    const host = await localCall('POST', '/v1/register', { email: 'expiry-host@teste.com', password: 'senha-forte-5', device: PC });
+    const mobile = await localCall('POST', '/v1/login', { email: 'expiry-host@teste.com', password: 'senha-forte-5', device: CEL });
+    await localCall('POST', '/v1/presence', { meta: { desktopHostActive: true } }, host.body.accessToken);
+    const request = await localCall('POST', `/v1/hosts/${host.body.device.id}/access-requests`, {}, mobile.body.accessToken);
+    await localCall('POST', `/v1/hosts/${host.body.device.id}/access-requests/${request.body.requestId}/approve`, {}, host.body.accessToken);
+    const redeemed = await localCall('GET', `/v1/hosts/${host.body.device.id}/access-requests/${request.body.requestId}`, null, mobile.body.accessToken);
+    assert.equal((await localCall('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, host.body.accessToken)).status, 200);
+    clock += 1001;
+    const expired = await localCall('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, host.body.accessToken);
+    assert.equal(expired.status, 401);
+    assert.equal(expired.body.error, 'invalid_host_grant');
+  } finally {
+    await new Promise((resolve) => expiryServer.close(resolve));
+    expiryServer.close_db();
+  }
+});
+
 test('remover dispositivo invalida suas sessões; não remove de outra conta', async () => {
   const a = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: { name: 'Vai sair', type: 'mobile' } });
   const b = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: { name: 'Fica', type: 'mobile' } });

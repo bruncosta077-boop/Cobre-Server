@@ -1,5 +1,13 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-20 — Cobre Server 0.5.0-beta.7 em preparação
+
+- Implementada a base de autorização por Desktop: o Mobile/TV solicita acesso a um host; o próprio Desktop autenticado consulta a fila e aprova ou recusa o pedido. O cliente recebe uma concessão assinada e limitada no tempo e por permissões.
+- O Desktop pode validar e revogar concessões. O Server lista concessões ativas por conta; pedidos expiram, têm limite por dispositivo e são invalidados quando o cliente é removido.
+- Testes cobrem aprovação/recusa, isolamento entre hosts e clientes, escopos, expiração, validação, revogação e metadados das concessões. Testes locais: 38/38 aprovados; `npm audit --audit-level=moderate`: zero vulnerabilidades; verificação de sintaxe e `git diff --check` passaram.
+- Limite funcional: as rotas estão implementadas no Server, mas Desktop e Mobile ainda não as chamam nem aplicam os escopos às rotas de biblioteca/áudio. Não anunciar o streaming autorizado como funcional até completar essa integração e testar entre aparelhos.
+- Item anotado para depois: mostrar a conta Cobre ID conectada em uma página de perfil editável, com os dados de perfil suportados.
+
 ## 2026-11-20 — Cobre Server 0.5.0-beta.6 publicado
 
 - O atualizador agora recorre ao feed Atom oficial do GitHub quando a API pública responde com limite de consultas ou falha temporária.
