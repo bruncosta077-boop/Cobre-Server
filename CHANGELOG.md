@@ -1,5 +1,11 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.11 — ícone alinhado à identidade Cobre
+
+- O ícone do Server agora parte do ICO original do Desktop e preserva a moldura, o tom cobre e o brilho do C.
+- Somente o símbolo central foi substituído por três módulos de servidor menores, centralizados e monocromáticos, mantendo o traço simples do ícone original.
+- PNG, ICO com os sete tamanhos e marca do painel são gerados a partir da mesma arte base; a origem e o gerador ficam no repositório.
+
 ## 0.5.0-beta.10 — identidade visual própria do Server
 
 - O ícone do aplicativo e do painel preserva a moldura Cobre em cobre, mas troca as barras de áudio por três módulos de servidor.

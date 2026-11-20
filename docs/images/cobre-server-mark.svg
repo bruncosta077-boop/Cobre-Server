@@ -1,15 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Cobre Server</title>
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
   <rect width="512" height="512" rx="112" fill="#10100f"/>
-  <path d="M367 132a174 174 0 1 0 0 248" fill="none" stroke="#d98043" stroke-width="32" stroke-linecap="round"/>
-  <g fill="#f1e9e1" stroke="#f1e9e1" stroke-width="8">
-    <rect x="180" y="194" width="142" height="42" rx="12" fill="#171513"/>
-    <rect x="180" y="258" width="142" height="42" rx="12" fill="#171513"/>
-    <rect x="180" y="322" width="142" height="42" rx="12" fill="#171513"/>
-  </g>
-  <g fill="#d98043">
-    <circle cx="202" cy="215" r="7"/><circle cx="202" cy="279" r="7"/><circle cx="202" cy="343" r="7"/>
-  </g>
-  <g stroke="#f1e9e1" stroke-linecap="round" stroke-width="7">
-    <path d="M224 215h75M224 279h75M224 343h75"/>
+  <path d="M385 130a174 174 0 1 0 0 252" fill="none" stroke="#c9773f" stroke-width="32" stroke-linecap="round"/>
+  <path d="M194 97a174 174 0 0 0-96 104" fill="none" stroke="#f2a46b" stroke-width="8" stroke-linecap="round" opacity=".78" filter="url(#glow)"/>
+  <g fill="none" stroke="#ece6df" stroke-width="7" stroke-linejoin="round">
+    <rect x="196" y="203" width="120" height="30" rx="9"/>
+    <rect x="196" y="241" width="120" height="30" rx="9"/>
+    <rect x="196" y="279" width="120" height="30" rx="9"/>
   </g>
 </svg>

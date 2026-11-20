@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão em publicação — 0.5.0-beta.10
+## Versão em publicação — 0.5.0-beta.11
 
 - [x] Identidade visual própria para o aplicativo Cobre Server, com símbolo de módulos centrais distinto do player Desktop.
 
