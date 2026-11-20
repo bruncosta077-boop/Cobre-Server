@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão preparada — 0.5.0-beta.6
+## Versão publicada — 0.5.0-beta.6
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.
@@ -35,8 +35,10 @@
 - [x] Pacote ZIP portátil e instalador gerados para Windows.
 - [x] Exportação/restauração criptografada da base e chave local, com confirmação e cópia de recuperação.
 - [ ] Validar backup/restauração pela interface Windows com instalação descartável e dados de teste.
-- [ ] Assinatura digital e atualizações no próprio aplicativo.
-- [ ] Validação completa de HTTPS com Desktop, Mobile e TV, além de configuração assistida de rede e logs sanitizados.
+- [x] Atualizador dentro do aplicativo, com SHA-256 e notas da versão.
+- [ ] Assinatura digital do executável Windows.
+- [ ] Validar HTTPS e login com certificados confiáveis nos aparelhos Desktop, Mobile e TV.
+- [ ] Configuração assistida de rede, logs sanitizados e suporte a relay de mídia, caso necessário para o uso fora da LAN.
 
 ## Critérios de pronto
 
