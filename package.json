@@ -1,6 +1,6 @@
 {
   "name": "cobre-server",
-  "version": "0.5.0-beta.3",
+  "version": "0.5.0-beta.4",
   "private": true,
   "description": "Aplicativo desktop do Cobre Server para identidade, dispositivos, presença e diagnóstico do ecossistema Cobre.",
   "author": "Bruno C S Moraes (com contribuições de dilucas00)",
@@ -13,7 +13,7 @@
     "appId": "app.cobre.server",
     "productName": "Cobre Server",
     "directories": { "output": "release" },
-    "files": ["server.js", "dashboard.js", "dashboard/**/*", "electron-main.js", "preload.js", "backup.js", "package.json"],
+    "files": ["server.js", "dashboard.js", "dashboard/**/*", "electron-main.js", "preload.js", "backup.js", "update.js", "package.json"],
     "win": { "icon": "icon.ico", "target": ["nsis", "zip"], "artifactName": "Cobre-Server-${version}-Windows-${arch}.${ext}" },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true }
   }

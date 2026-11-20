@@ -146,6 +146,96 @@ $('device-search').addEventListener('input', () => { if (snapshot) renderDevices
 $('refresh').addEventListener('click', refresh);
 $('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
 $('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
+
+const updateBox = document.createElement('div');
+updateBox.className = 'server-update';
+const updateLabel = document.createElement('p');
+updateLabel.className = 'eyebrow'; updateLabel.textContent = 'ATUALIZAÇÕES';
+const updateHeading = document.createElement('h3'); updateHeading.textContent = 'Atualizar Cobre Server';
+const updateDescription = document.createElement('p');
+updateDescription.className = 'settings-copy';
+updateDescription.textContent = 'Confira as notas, baixe o instalador oficial e atualize por cima. A cópia de contas e configurações fica no perfil do Windows.';
+const updateStatus = document.createElement('p');
+updateStatus.className = 'update-status'; updateStatus.setAttribute('role', 'status'); updateStatus.setAttribute('aria-live', 'polite');
+updateStatus.textContent = 'Verifique quando quiser procurar uma versão nova.';
+const updateActions = document.createElement('div'); updateActions.className = 'update-actions';
+const checkUpdateButton = document.createElement('button'); checkUpdateButton.className = 'secondary-button'; checkUpdateButton.textContent = 'Verificar atualizações';
+const downloadUpdateButton = document.createElement('button'); downloadUpdateButton.className = 'secondary-button'; downloadUpdateButton.textContent = 'Baixar e conferir'; downloadUpdateButton.hidden = true;
+const installUpdateButton = document.createElement('button'); installUpdateButton.className = 'primary-button'; installUpdateButton.textContent = 'Fechar e abrir instalador'; installUpdateButton.hidden = true;
+updateActions.append(checkUpdateButton, downloadUpdateButton, installUpdateButton);
+const updateDetails = document.createElement('div'); updateDetails.className = 'update-details'; updateDetails.hidden = true;
+const updateVersion = document.createElement('b');
+const updateNotes = document.createElement('pre'); updateNotes.className = 'update-notes';
+updateDetails.append(updateVersion, updateNotes);
+updateBox.append(updateLabel, updateHeading, updateDescription, updateStatus, updateDetails, updateActions);
+$('quit-app').closest('.settings-card').insertBefore(updateBox, $('quit-app'));
+const latestNotesCard = document.createElement('article'); latestNotesCard.className = 'panel note-panel release-entry dynamic-release-notes'; latestNotesCard.hidden = true;
+const latestTitleRow = document.createElement('div'); latestTitleRow.className = 'release-title';
+const latestTitleGroup = document.createElement('div');
+const latestVersionLabel = document.createElement('p'); latestVersionLabel.className = 'eyebrow';
+const latestReleaseTitle = document.createElement('h2');
+latestTitleGroup.append(latestVersionLabel, latestReleaseTitle);
+const latestReleaseBadge = document.createElement('span'); latestReleaseBadge.className = 'release-badge';
+latestTitleRow.append(latestTitleGroup, latestReleaseBadge);
+const latestReleaseNotes = document.createElement('pre'); latestReleaseNotes.className = 'dynamic-release-body';
+latestNotesCard.append(latestTitleRow, latestReleaseNotes);
+$('page-releases').prepend(latestNotesCard);
+let availableUpdate = null;
+let downloadedVersion = null;
+
+checkUpdateButton.addEventListener('click', async () => {
+  checkUpdateButton.disabled = true;
+  downloadUpdateButton.hidden = true; installUpdateButton.hidden = true; updateDetails.hidden = true;
+  updateStatus.textContent = 'Consultando as versões oficiais…'; updateStatus.className = 'update-status';
+  try {
+    const update = await window.cobreApp?.checkUpdate();
+    if (!update) throw new Error('Não foi possível consultar atualizações.');
+    latestVersionLabel.textContent = `VERSÃO ${update.latestVersion}`;
+    latestReleaseTitle.textContent = update.name;
+    latestReleaseBadge.textContent = update.prerelease ? 'BETA' : 'ESTÁVEL';
+    latestReleaseNotes.textContent = update.notes;
+    latestNotesCard.hidden = false;
+    updateVersion.textContent = `${update.name} · ${update.latestVersion} · ${(update.asset.size / 1024 / 1024).toFixed(1)} MB`;
+    updateNotes.textContent = update.notes;
+    updateDetails.hidden = false;
+    if (!update.available) {
+      availableUpdate = null;
+      updateStatus.textContent = `O Cobre Server ${update.currentVersion} já está na versão mais recente.`;
+      return;
+    }
+    availableUpdate = update;
+    downloadUpdateButton.hidden = false;
+    updateStatus.textContent = 'Nova versão disponível. Confira as notas antes de instalar.';
+  } catch (error) {
+    updateStatus.textContent = error.message || 'Não foi possível verificar atualizações.';
+    updateStatus.classList.add('error');
+  } finally { checkUpdateButton.disabled = false; }
+});
+
+downloadUpdateButton.addEventListener('click', async () => {
+  if (!availableUpdate) return;
+  downloadUpdateButton.disabled = true;
+  updateStatus.textContent = 'Baixando e conferindo SHA-256…'; updateStatus.className = 'update-status';
+  try {
+    const result = await window.cobreApp?.downloadUpdate(availableUpdate.latestVersion);
+    if (!result || result.version !== availableUpdate.latestVersion) throw new Error('O instalador não foi preparado corretamente.');
+    downloadedVersion = result.version;
+    updateStatus.textContent = `Instalador ${result.version} baixado e verificado.`;
+    downloadUpdateButton.hidden = true; installUpdateButton.hidden = false;
+  } catch (error) {
+    updateStatus.textContent = error.message || 'Não foi possível baixar a atualização.';
+    updateStatus.classList.add('error');
+  } finally { downloadUpdateButton.disabled = false; }
+});
+
+installUpdateButton.addEventListener('click', async () => {
+  if (!downloadedVersion || !window.confirm(`O Cobre Server vai fechar para abrir o instalador ${downloadedVersion}. Suas contas e configurações continuam no perfil do Windows. Continuar?`)) return;
+  installUpdateButton.disabled = true;
+  updateStatus.textContent = 'Conferindo o instalador e abrindo a atualização…'; updateStatus.className = 'update-status';
+  try { await window.cobreApp?.installUpdate(downloadedVersion); }
+  catch (error) { updateStatus.textContent = error.message || 'Não foi possível abrir o instalador.'; updateStatus.classList.add('error'); installUpdateButton.disabled = false; }
+});
+
 let backupMode = 'export';
 function openBackupDialog(mode) {
   backupMode = mode;

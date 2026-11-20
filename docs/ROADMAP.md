@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão atual — 0.5.0-beta.3 publicada
+## Versão atual — 0.5.0-beta.4 em preparação
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.
@@ -15,7 +15,8 @@
 - [x] Receber e exibir taxa e latência inicial do stream reportadas pelo Mobile, separadas de presença e latência do catálogo.
 - [ ] Métricas de erros do Desktop, suporte equivalente na TV e validação integrada em uso real.
 - [ ] HTTPS/TLS com configuração de confiança utilizável pelos clientes.
-- [ ] Assinatura do aplicativo e atualizador integrado.
+- [x] Atualizador integrado para releases oficiais Windows x64, com notas, SHA-256 e confirmação antes de instalar.
+- [ ] Assinatura digital do aplicativo Windows.
 - [ ] Validar backup/restauração pela interface Windows com instalação e dados reais.
 
 ## Próximos marcos de integração

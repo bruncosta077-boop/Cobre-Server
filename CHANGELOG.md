@@ -1,5 +1,13 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.4 — atualizações dentro do aplicativo
+
+- A página Configurações agora verifica releases, apresenta as notas, baixa o instalador oficial para Windows x64 e abre a instalação após confirmação.
+- O download aceita apenas o ativo da release oficial do Cobre Server no GitHub, limita o tamanho, segue somente redirecionamentos HTTPS permitidos e valida o SHA-256 antes de liberar o instalador.
+- O hash é conferido novamente imediatamente antes de abrir o arquivo. Atualizar por cima mantém a base e a chave no perfil `%APPDATA%`; o instalador ainda solicita a confirmação normal do Windows.
+- Testes automatizados cobrem ordem de versões, seleção do instalador, redirecionamentos, checksum correto/adulterado e descarte de arquivo inválido.
+- Continua beta: API LAN HTTP sem criptografia; TLS e validação do pareamento em aparelhos reais continuam pendentes.
+
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
 ## 0.5.0-beta.3 — pareamento Cobre TV mais seguro

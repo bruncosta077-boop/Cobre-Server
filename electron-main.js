@@ -9,6 +9,7 @@ const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const { createServer } = require('./server');
 const { createDashboard } = require('./dashboard');
 const { createBackup, openBackup } = require('./backup');
+const { checkForUpdate, prepareUpdate, verifyDownloadedUpdate, cleanupTemporaryInstallers } = require('./update');
 
 const apiPort = Number(process.env.PORT || 8080);
 const dashboardPort = Number(process.env.DASHBOARD_PORT || 8788);
@@ -18,6 +19,7 @@ let apiServer;
 let dashboardServer;
 let mainWindow;
 let quitting = false;
+let preparedUpdate = null;
 
 app.setName('Cobre Server');
 app.setAppUserModelId('app.cobre.server');
@@ -68,6 +70,39 @@ ipcMain.handle('cobre:close-app', async () => {
 
 ipcMain.handle('cobre:open-data-folder', async () => {
   await shell.openPath(dataDirectory);
+  return true;
+});
+
+function assertDashboardSender(event) {
+  let origin = '';
+  try { origin = new URL(event.senderFrame?.url || '').origin; } catch {}
+  if (origin !== `http://127.0.0.1:${dashboardPort}`) throw new Error('A atualização só pode ser controlada pelo painel local do Cobre Server.');
+}
+
+ipcMain.handle('cobre:update-check', async (event) => {
+  assertDashboardSender(event);
+  if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('O atualizador integrado está disponível para Windows 64 bits.');
+  return checkForUpdate(app.getVersion());
+});
+
+ipcMain.handle('cobre:update-download', async (event, version) => {
+  assertDashboardSender(event);
+  if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('O atualizador integrado está disponível para Windows 64 bits.');
+  if (typeof version !== 'string' || version.length > 40) throw new Error('A versão solicitada é inválida.');
+  const next = await prepareUpdate(version, app.getVersion(), app.getPath('temp'));
+  if (preparedUpdate?.path) await fs.promises.rm(preparedUpdate.path, { force: true }).catch(() => {});
+  preparedUpdate = next;
+  return { version: next.version, size: next.size };
+});
+
+ipcMain.handle('cobre:update-install', async (event, version) => {
+  assertDashboardSender(event);
+  if (!preparedUpdate || preparedUpdate.version !== version || !await verifyDownloadedUpdate(preparedUpdate)) {
+    throw new Error('O instalador preparado não existe ou foi alterado. Baixe novamente antes de instalar.');
+  }
+  const error = await shell.openPath(preparedUpdate.path);
+  if (error) throw new Error(`Não foi possível abrir o instalador: ${error}`);
+  setTimeout(() => app.quit(), 500);
   return true;
 });
 
@@ -217,6 +252,7 @@ app.whenReady().then(() => hasSingleInstanceLock ? start() : undefined).catch((e
   dialog.showErrorBox('Cobre Server não iniciou', `Não foi possível iniciar a API ou o painel local.\n\n${error.message}\n\nVerifique se as portas ${apiPort} e ${dashboardPort} estão livres.`);
   app.quit();
 });
+app.whenReady().then(() => cleanupTemporaryInstallers(app.getPath('temp'))).catch(() => {});
 app.on('second-instance', createWindow);
 app.on('activate', createWindow);
 app.on('before-quit', closeServices);

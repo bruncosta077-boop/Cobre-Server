@@ -1,5 +1,13 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-20 — atualizador do Cobre Server em preparação
+
+- Implementado no Server um fluxo dentro de Configurações para consultar a release oficial, ler notas, baixar o instalador Windows x64, conferir SHA-256 e pedir confirmação antes de iniciar a instalação.
+- O processo principal valida origem da janela, versão, URL oficial, limite de tamanho e checksum; o hash é conferido novamente na hora de abrir. O atualizador guarda o instalador temporário fora da pasta do aplicativo e limpa resíduos próprios na inicialização.
+- A atualização por cima mantém os dados do usuário em `%APPDATA%`; isso não é backup por si só. O Server já tem exportação criptografada da instância.
+- Versão preparada: 0.5.0-beta.4. Validação local: 30/30 testes, verificações de sintaxe e `git diff --check`; `npm audit --audit-level=moderate`: zero vulnerabilidades conhecidas.
+- Ainda não publicado nem testado visualmente no Windows. CI e release com instalador/ZIP são necessários antes de dizer que usuários podem atualizar pelo app. Continua pendente TLS, assinatura digital e validação física do ecossistema.
+
 ## 2026-11-20 — estado de atualização e retenção de dados
 
 - Incluído `docs/ESTADO-ECOSSISTEMA.md`, com versões publicadas de Desktop, Mobile, Server e TV, diferença entre release e código atual, comportamento de atualização/dados e critérios que ainda bloqueiam a estabilidade 1.0.
