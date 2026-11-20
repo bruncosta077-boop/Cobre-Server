@@ -6,7 +6,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 
 - O Mobile 0.8.0 mede latência até o primeiro bloco e taxa recebida durante áudio vindo do endpoint LAN do Desktop; arquivos locais ficam fora da medição.
 - O heartbeat Cobre ID já aceita esses dois campos. A tela do Server agora os apresenta como diagnóstico do stream, separado da resposta do catálogo e da presença.
-- Testes automatizados do Server: 16/16 passaram. Build local do APK foi impedida pelo Java local incompatível (Java 8 selecionado; JDK embutido é 25); workflow Android com Java 17 está em execução.
+- Testes automatizados do Server: 16/16 passaram. O build local do APK não pôde usar o Java instalado (Java 8 selecionado; JDK embutido é 25), então o workflow Android com Java 17 compilou o APK 0.8.0 com sucesso. Artefato: execução [#14](https://github.com/bruncosta077-boop/Cobre-Mobile/actions/runs/44676045735); SHA-256 do pacote de artefatos: `46ffc5d1329d080a4113e9c318359d5cb75f62145155e7783ed883ff6d2e5bc9`.
 - Limite: o Cobre Server não recebe nem retransmite áudio; reprodução continua exigindo que Desktop e Mobile estejam na mesma rede. A taxa no aparelho ainda precisa de validação prática após instalar o APK.
 - Próximas prioridades: validar a medição em aparelho real; desenhar relay seguro para redes diferentes; organizar a tela de configurações do Desktop em página própria e acrescentar backup/restauração das preferências sem exportar credenciais.
 
