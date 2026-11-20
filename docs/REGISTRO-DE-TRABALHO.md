@@ -6,7 +6,7 @@
 - Evidência atual: Desktop 3.8.0 estável; Mobile 0.9.0 pré-release (código 0.10.0 ainda sem chave de distribuição); Server 0.5.0-beta.3; TV 0.2.0 ainda sem release e sem reprodução real.
 - Revalidação local: `npm test` do Server passou 24/24; `npm audit --audit-level=moderate` reportou zero vulnerabilidades conhecidas. Isso não substitui teste de restauração pela interface nem validação TLS/dispositivos reais.
 - A compilação Android da TV passou no workflow `44743655894` após adicionar os componentes de diálogo que faltavam. Pareamento foi implementado no código, mas aguarda teste físico com Server/Mobile reais.
-- Mobile 0.11.0: o backup Android agora inclui configurações de acesso e email sem exportar refresh token; a migração do token legado para preferências excluídas do backup foi compilada no workflow `44745750599` (sucesso). Não existe APK assinado de release até configurar a chave estável.
+- Mobile 0.11.0: o backup Android agora inclui configurações de acesso e email sem exportar refresh token; a migração do arquivo legado misto foi compilada no workflow `44746930132` (sucesso). Não existe APK assinado de release até configurar a chave estável; restauração em aparelho não foi testada.
 - O Server permanece beta: HTTP na LAN, sem retransmissão de áudio. Não publicar 1.0 até cumprir os critérios de `ESTADO-ECOSSISTEMA.md`.
 
 Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho pendente por aplicativo. Atualize junto a cada entrega; não marque itens apenas planejados como concluídos.
