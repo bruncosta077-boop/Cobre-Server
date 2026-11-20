@@ -16,7 +16,7 @@ Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico loca
 
 ## O que é
 
-O Cobre Server é um **aplicativo desktop independente** que mantém os serviços locais do Cobre ID ativos e oferece uma central visual para acompanhar contas, dispositivos e estado do serviço. Ele foi desenhado para fazer parte do Cobre Desktop, Mobile e da futura versão para Google TV / Android TV.
+O Cobre Server é um **aplicativo desktop independente** que mantém os serviços locais do Cobre ID ativos e oferece uma central visual para acompanhar contas, dispositivos e estado do serviço. Ele foi desenhado para fazer parte do [Cobre Desktop](https://github.com/bruncosta077-boop/Cobre), [Mobile](https://github.com/bruncosta077-boop/Cobre-Mobile) e [TV](https://github.com/bruncosta077-boop/Cobre-TV).
 
 Não é uma página hospedada nem um serviço de streaming de áudio. Ao abrir o programa, uma janela própria do Cobre Server aparece e a API fica disponível na rede local para os clientes autorizados.
 
