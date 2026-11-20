@@ -5,7 +5,7 @@
 - O atualizador agora recorre ao feed Atom oficial do GitHub quando a API pública responde com limite de consultas ou falha temporária.
 - O fallback só aceita releases e ativos do repositório oficial, confirma a disponibilidade e o tamanho do instalador Windows x64, e continua exigindo SHA-256 antes de liberar o download.
 - Testes cobrem parser do feed, rejeição de links externos e o fluxo API limitada → Atom → HEAD do instalador → manifesto → download → verificação SHA-256.
-- Validação local: 36/36 testes passaram; `npm audit --audit-level=moderate` encontrou zero vulnerabilidades. A consulta online do código beta6 foi confirmada durante a validação local: apesar do limite da API, o fallback retornou a release beta5 e identificou o instalador oficial.
+- Validação local: 36/36 testes passaram; `npm audit --audit-level=moderate` encontrou zero vulnerabilidades. A consulta online do atualizador desde a versão beta5 encontrou a beta6 publicada, retornando a URL oficial e o tamanho do instalador. A release inclui o manifesto oficial de checksums, validado contra os digests dos ativos na API do GitHub.
 - Publicação verificada: os workflows da branch `44759833549` e da tag `44760524370` concluíram com sucesso. A release contém instalador (121.390.780 bytes), ZIP (153.283.652 bytes) e checksums; os três downloads respondem HTTP 200 e o manifesto corresponde aos SHA-256 da API do GitHub.
 ## 2026-11-20 — Cobre Server 0.5.0-beta.5 publicado
 
