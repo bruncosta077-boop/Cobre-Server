@@ -10,9 +10,9 @@ O áudio deve sair diretamente do Desktop para o aparelho pela rede local. O Cob
 
 ## O que o código atual faz
 
-O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e oferece endpoints para solicitar um código de TV e aprová-lo por outro dispositivo autenticado. O fluxo de solicitação/resgate ainda não está ligado nos clientes. O registro de presença informa somente que um aparelho enviou um heartbeat recentemente.
+O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e oferece endpoints para solicitar um código de TV e aprová-lo por outro dispositivo autenticado. O Mobile implementa a aprovação; o TV 0.2.0 solicita e resgata o código, guardando o refresh token no Android Keystore. Os clientes compilam, mas o pareamento ainda não foi validado em aparelhos reais. O registro de presença informa somente que um aparelho enviou um heartbeat recentemente.
 
-O servidor local embutido no Desktop ainda usa seu próprio contrato de biblioteca e streaming. A integração por Cobre ID ainda não concede a um Mobile/TV acesso a um Desktop específico. O fluxo completo de solicitação e consulta do código também precisa ser implementado nos clientes.
+O servidor local embutido no Desktop ainda usa seu próprio contrato de biblioteca e streaming. A integração por Cobre ID ainda não concede a um Mobile/TV acesso a um Desktop específico. A TV permanece com biblioteca de demonstração e sem reprodução de áudio.
 
 O Cobre Server é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio dependem de medições reportadas pelos clientes. A partir da 0.5.0-beta.1, a interface exporta e restaura a base e a chave em um arquivo autenticado e criptografado por senha.
 

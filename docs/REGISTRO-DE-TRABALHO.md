@@ -8,6 +8,7 @@
 - A compilação Android da TV passou no workflow `44743655894` após adicionar os componentes de diálogo que faltavam. Pareamento foi implementado no código, mas aguarda teste físico com Server/Mobile reais.
 - Mobile 0.11.0: o backup Android agora inclui configurações de acesso e email sem exportar refresh token; a migração do arquivo legado misto foi compilada no workflow `44746930132` (sucesso). Não existe APK assinado de release até configurar a chave estável; restauração em aparelho não foi testada.
 - O Server permanece beta: HTTP na LAN, sem retransmissão de áudio. Não publicar 1.0 até cumprir os critérios de `ESTADO-ECOSSISTEMA.md`.
+- Roadmap e arquitetura foram corrigidos para refletir o pareamento já presente em Mobile/TV e seus limites: build passou, teste físico e autorização de host Desktop ainda faltam.
 
 Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho pendente por aplicativo. Atualize junto a cada entrega; não marque itens apenas planejados como concluídos.
 
