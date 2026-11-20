@@ -68,7 +68,7 @@ function renderDevices(devices) {
 }
 
 function showPage(name) {
-  const labels = { overview: 'Visão geral', devices: 'Dispositivos', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
+  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
   if (!labels[name]) return;
   document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === `page-${name}`));
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
@@ -91,6 +91,7 @@ async function refresh() {
     $('identity-status').textContent = 'Serviço ativo';
     $('uptime').textContent = `Ativo há ${Math.floor(snapshot.uptimeSeconds / 60)} min`;
     $('accounts').textContent = snapshot.accountCount;
+    $('account-total').textContent = snapshot.accountCount;
     $('online').textContent = online;
     $('device-count').textContent = snapshot.deviceCount;
     $('identity-online').textContent = online;
@@ -135,5 +136,32 @@ $('device-search').addEventListener('input', () => { if (snapshot) renderDevices
 $('refresh').addEventListener('click', refresh);
 $('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
 $('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
+$('account-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const email = $('account-email').value.trim();
+  const password = $('account-password').value;
+  const confirm = $('account-confirm').value;
+  const message = $('account-message');
+  const submit = $('account-submit');
+  message.className = 'account-message';
+  if (password !== confirm) { message.textContent = 'As senhas não coincidem.'; message.classList.add('error'); return; }
+  submit.disabled = true; submit.textContent = 'Criando conta…'; message.textContent = '';
+  try {
+    const response = await fetch('/api/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, cache: 'no-store', body: JSON.stringify({ email, password }) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Não foi possível criar a conta.');
+    $('account-email').value = '';
+    $('account-password').value = '';
+    $('account-confirm').value = '';
+    message.textContent = `Conta ${result.account.email} criada. Já pode entrar nos aplicativos Cobre.`;
+    message.classList.add('success');
+    await refresh();
+  } catch (error) {
+    message.textContent = error.message || 'Não foi possível criar a conta.';
+    message.classList.add('error');
+  } finally {
+    submit.disabled = false; submit.textContent = 'Criar conta Cobre ID';
+  }
+});
 refresh();
 window.setInterval(refresh, 15_000);

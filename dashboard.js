@@ -14,7 +14,7 @@ const ASSETS = new Map([
 const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
 function createDashboard(api) {
-  return http.createServer((req, res) => {
+  return http.createServer(async (req, res) => {
     const remote = req.socket.remoteAddress || '';
     let host = '';
     try { host = new URL(`http://${req.headers.host || ''}`).hostname.replace(/^\[|\]$/g, '').toLowerCase(); } catch {}
@@ -31,6 +31,32 @@ function createDashboard(api) {
         'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
       });
       return res.end(JSON.stringify(snapshot));
+    }
+    if (req.method === 'POST' && url.pathname === '/api/accounts') {
+      const expectedOrigin = `http://${req.headers.host}`;
+      // Account creation is a local administrative action: require same-origin JSON to block cross-site form posts.
+      if (!origin || origin !== expectedOrigin || !/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) {
+        res.writeHead(403, { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(JSON.stringify({ error: 'origin_not_allowed', message: 'A criação de contas só pode ser feita pelo painel local do Cobre Server.' }));
+      }
+      let raw = '';
+      try {
+        for await (const chunk of req) {
+          raw += chunk.toString('utf8');
+          if (Buffer.byteLength(raw) > 4096) {
+            res.writeHead(413, { 'Cache-Control': 'no-store' });
+            return res.end(JSON.stringify({ error: 'too_large', message: 'Requisição grande demais.' }));
+          }
+        }
+        const input = raw ? JSON.parse(raw) : {};
+        const account = await api.createAccount(input);
+        res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(JSON.stringify({ account }));
+      } catch (error) {
+        const status = Number(error.status) || 400;
+        res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(JSON.stringify({ error: error.error || 'bad_request', message: status < 500 ? error.message : 'Não foi possível criar a conta.' }));
+      }
     }
     if (req.method !== 'GET' || !ASSETS.has(url.pathname)) {
       res.writeHead(404, { 'Cache-Control': 'no-store' }); return res.end('Não encontrado.');

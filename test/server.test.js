@@ -47,6 +47,16 @@ test('registro cria conta, dispositivo e sessão', async () => {
   assert.ok(r.body.accessToken && r.body.refreshToken && r.body.device.id);
 });
 
+test('painel local cria uma conta Cobre ID sem associar um aparelho falso', async () => {
+  const account = await srv.createAccount({ email: 'painel@cobre.test', password: 'senha-forte-painel' });
+  assert.equal(account.email, 'painel@cobre.test');
+  assert.equal(srv.dashboardSnapshot().accountCount, 2);
+  const login = await call('POST', '/v1/login', { email: account.email, password: 'senha-forte-painel', device: CEL });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.user.email, account.email);
+  await assert.rejects(srv.createAccount({ email: account.email, password: 'senha-forte-painel' }), (error) => error.status === 409);
+});
+
 test('chave local corrompida impede inicialização com assinatura fraca', () => {
   const brokenDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cobre-key-'));
   try {
@@ -167,7 +177,7 @@ test('corpo grande, JSON inválido e rota inexistente', async () => {
 });
 
 test('painel local serve logo e bloqueia origens e hosts externos', async () => {
-  const panel = createDashboard({ dashboardSnapshot: () => ({ ok: true }) });
+  const panel = createDashboard({ dashboardSnapshot: () => ({ ok: true }), createAccount: async (input) => ({ email: input.email }) });
   await new Promise((ok) => panel.listen(0, '127.0.0.1', ok));
   const panelBase = `http://127.0.0.1:${panel.address().port}`;
   try {
@@ -185,6 +195,11 @@ test('painel local serve logo e bloqueia origens e hosts externos', async () => 
     });
     assert.equal(blockedHost, 403);
     assert.equal((await fetch(`${panelBase}/`, { headers: { Origin: 'https://evil.example' } })).status, 403);
+    const account = await fetch(`${panelBase}/api/accounts`, { method: 'POST', headers: { Origin: panelBase, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'novo@cobre.test', password: 'senha-forte-1' }) });
+    assert.equal(account.status, 201);
+    assert.equal((await account.json()).account.email, 'novo@cobre.test');
+    const forged = await fetch(`${panelBase}/api/accounts`, { method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'fraude@cobre.test', password: 'senha-forte-1' }) });
+    assert.equal(forged.status, 403);
   } finally {
     await new Promise((resolve) => panel.close(resolve));
   }

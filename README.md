@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.2) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
+[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.3) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
@@ -26,7 +26,7 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.2/Cobre-Server-0.4.0-beta.2-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.2/Cobre-Server-0.4.0-beta.2-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.2/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
+O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.3/Cobre-Server-0.4.0-beta.3-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.3/Cobre-Server-0.4.0-beta.3-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.3/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
 
 O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 

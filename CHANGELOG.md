@@ -2,6 +2,13 @@
 
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
+## 0.4.0-beta.3 — criação local de contas Cobre ID
+
+- O painel do Cobre Server agora cria contas Cobre ID com email e senha, sem cadastrar um aparelho fictício.
+- A conta fica pronta para login no Desktop, Mobile e TV; senha confirmada na interface e validada no serviço.
+- A criação só aceita pedido JSON da mesma origem do painel local, que continua restrito a loopback.
+- A API segue recusando conexões de origem pública. HTTP na LAN continua sem criptografia.
+
 ## 0.4.0-beta.2 — revisão de segurança em validação
 
 - A API recusa, por padrão, conexões de origem fora de loopback e redes locais privadas, mesmo quando a porta está encaminhada para a internet.

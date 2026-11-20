@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão atual — 0.4.0-beta.2 em desenvolvimento
+## Versão atual — 0.4.0-beta.3 em desenvolvimento
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e aprovação inicial de pareamento por código no Desktop.

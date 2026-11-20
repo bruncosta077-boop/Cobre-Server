@@ -79,3 +79,25 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 - Package, lock, README, notas dentro do app, roadmap, changelog e SECURITY foram atualizados para `0.4.0-beta.2`. Com Node 22.13.0/npm 10.9.2: `npm ci` passou, `npm test` 15/15, `npm audit` zero vulnerabilidades e `npm run dist:win` passou. O ZIP local (153.267.515 bytes; SHA-256 `4fe98f6f28e59d2e5e4c4eee253ba4cc21fd545a3d65c62c6e6581960ab15253`) e o instalador (121.376.651 bytes; SHA-256 `8d851b1751cbdd2086edd446ba3dc84fc79f15f86f301865dc078ab1f046f447`) contêm o filtro de rede e as notas beta. Ainda falta confirmar GitHub Actions e validar tráfego em LAN real; não criar release 1.0.0 sem transporte seguro e teste de instalação/dispositivo.
 - `npm ci` ainda imprime avisos de pacotes indiretos depreciados (`inflight`, `rimraf@2`, `glob@7`, `boolean`); o audit não reporta vulnerabilidades conhecidas. A cadeia de build deve ser atualizada/reduzida antes da 1.0.
 - Varredura dos quatro repositórios não encontrou caminhos de banco, chaves, `.env`, configurações locais nem padrões comuns de token/credencial entre os arquivos versionados. Esta busca é uma verificação pontual, não um scanner de segredo certificado.
+
+## 2026-11-20 — Cobre Server 0.4.0-beta.3: contas Cobre ID pelo app
+
+- A central do Server ganhou a seção **Contas Cobre ID** com formulário email/senha/confirmação e estado de sucesso/erro. Senhas não são mantidas no DOM após criação bem-sucedida.
+- O servidor cria a conta sem simular um dispositivo; o login real do Mobile/Desktop/TV cria o respectivo aparelho no primeiro uso.
+- A rota administrativa `/api/accounts` só aceita POST JSON da mesma origem do painel local, que já valida loopback, Host e Origin e permanece restrito ao próprio computador. A API pública do Cobre ID continua recusando IP de origem público.
+- Testes Node 22.13.0/npm 10.9.2: 16/16 aprovados, incluindo criação local, login imediato pela API, duplicidade, tentativa de origem maliciosa e validação de email/senha. `npm audit --audit-level=moderate`: zero vulnerabilidades conhecidas. Build Windows passou. Smoke test do app empacotado confirmou painel HTTP 200, criação pela tela local e login real da conta. ZIP: SHA-256 `e902254410ef466bc76987debee1067e750f7db701fa734815033e98df174e77`; instalador: `18baf8cf02806498774daf3f2257e9a5196c9e652af07c312c7b51b6c7414d2e`. Ainda pendente: execução do GitHub Actions e uso em rede/dispositivos reais.
+
+## 2026-11-20 — avanço coordenado Desktop 3.6.0 e Server 0.4.0-beta.3
+
+### Cobre Server
+- Adicionada a tela Contas Cobre ID ao aplicativo. A senha é validada e armazenada com hash scrypt; a conta é criada sem aparelho fictício e pode entrar nos clientes.
+- A rota administrativa exige JSON e mesma origem; o painel segue local. Não se abriu o serviço ao acesso público.
+- 16/16 testes, `npm audit` sem vulnerabilidades conhecidas, build Windows e smoke test do executável concluídos. Teste funcional isolado criou conta no painel, autenticou pela API e confirmou a versão beta3 pelo status.
+- Artefatos locais beta3: ZIP SHA-256 `e902254410ef466bc76987debee1067e750f7db701fa734815033e98df174e77`; instalador `18baf8cf02806498774daf3f2257e9a5196c9e652af07c312c7b51b6c7414d2e`. Resta validar a execução do workflow de publicação e uso em rede/dispositivos reais.
+
+### Cobre Desktop
+- Removido `webSecurity: false` de todas as três janelas do Desktop. As páginas locais e as mídias passam pelo protocolo controlado `cobre://app`; CSP, allowlist de arquivos, bloqueio de navegação e popup, sandbox e contexto isolado ficam ativos.
+- Atualizador interno corrigido para os dois formatos de instalação, com validação SHA-256/manifesto, seleção de arquivos, backup e rollback. Testes temporários de instalação e falha confirmaram a cópia e restauração.
+- Build Windows passou; `npm audit` sem vulnerabilidades conhecidas. Smoke test reproduziu o carregamento da faixa WAV temporária por `cobre://app/media/` (200, `audio/wav`) e abriu a janela Cobre ID. O repositório ainda não tem testes automatizados (`node --test`: zero casos).
+- O Cobre 3.5.0 atualmente aberto no computador é descompactado e tem o updater antigo, incapaz de instalar esta atualização. É necessário aplicar 3.6.0 uma vez pelo instalador ou ZIP; depois disso o updater novo atende futuras versões.
+- Hashes locais Desktop 3.6.0: EXE `2b541e389ff0530aec121eb42616919b8a3f445207d5142b785a40466c5f594b`; ZIP portátil `11bca2341f9f39b8fa94eea91d280b44b8a8c05d9a86eae443a56258697be4d`; pacote interno `c0357821fa261ddf1e54c31a806d9f163863e866ff8e0c89f35036d443a414d3`. Os pacotes da release oficial serão reconstruídos pelo GitHub Actions. EXE sem assinatura digital.

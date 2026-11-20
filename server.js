@@ -376,6 +376,20 @@ function createServer(opts = {}) {
       }),
     };
   };
+  server.createAccount = async (input = {}) => {
+    const email = str(input.email, 254).toLowerCase();
+    const password = typeof input.password === 'string' ? input.password : '';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpError(400, 'bad_email', 'Informe um email válido.');
+    if (password.length < 8 || password.length > 200) throw new HttpError(400, 'weak_password', 'A senha precisa ter de 8 a 200 caracteres.');
+    try {
+      const id = crypto.randomUUID();
+      q.addUser.run(id, email, await hashPass(password), now());
+      return { id, email };
+    } catch (error) {
+      if (String(error.message).includes('UNIQUE')) throw new HttpError(409, 'email_taken', 'Este email já tem uma conta Cobre ID.');
+      throw error;
+    }
+  };
   server.close_db = () => db.close();
   return server;
 }
