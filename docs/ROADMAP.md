@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão publicada — 0.5.0-beta.7
+## Versão publicada — 0.5.0-beta.8
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.
@@ -11,6 +11,7 @@
 - [x] Workflow do GitHub Actions para gerar ZIP portátil e instalador Windows.
 - [x] Exportar/restaurar uma cópia criptografada da base e chave, com validação e cópia de recuperação.
 - [x] API de concessão limitada a cada Desktop host: pedido, aprovação/recusa no host, escopos, expiração, validação e revogação. Desktop e Mobile ainda não consomem as rotas.
+- [x] Central local lista e revoga permissões emitidas por host.
 - [ ] Acesso autorizado do Mobile/TV à biblioteca e ao áudio do Desktop.
 - [x] Receber e exibir taxa e latência inicial do stream reportadas pelo Mobile, separadas de presença e latência do catálogo.
 - [ ] Métricas de erros do Desktop, suporte equivalente na TV e validação integrada em uso real.

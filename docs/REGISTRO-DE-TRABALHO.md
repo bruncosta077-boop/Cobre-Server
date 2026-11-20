@@ -1,11 +1,12 @@
 # Registro de trabalho — Ecossistema Cobre
 
-## 2026-11-20 — Cobre Server 0.5.0-beta.8 em preparação
+## 2026-11-20 — Cobre Server 0.5.0-beta.8 publicado
 
 - A central local ganhou a página **Acessos ao Desktop**, que lista conta, aparelho autorizado, host, escopos e validade das concessões ativas.
 - A página permite revogar concessões. A rota administrativa aceita somente JSON da mesma origem; o painel continua limitado a loopback.
 - A interface explica que a autorização ainda não está integrada ao servidor de biblioteca/áudio no Desktop e ao fluxo do Mobile.
-- Testes adicionados para os dados das concessões no painel e proteção de origem da revogação. Validação/publicação beta8 pendentes.
+- Testes de API/painel cobrem dados das concessões, revogação por interface, tentativa de origem externa e JSON inválido. A suíte completa passou 38/38; auditoria sem vulnerabilidades; verificações de sintaxe e `git diff --check` passaram.
+- GitHub Actions `44768476593` (branch) e `44769040814` (tag) passaram. A [release beta8](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.8) publica instalador e ZIP, ambos HTTP 200. Checksums oficiais: EXE `50de26e841eccfc51f9c53e4f00cb5fd94c35cd2f9ab2758cb8218c5b369fe31`; ZIP `09c5b56832a3b638694c3c676d9962709d5e28bb331758e9bed9d1658b9933a6`.
 
 ## 2026-11-20 — Cobre Server 0.5.0-beta.7 publicado
 
