@@ -115,7 +115,7 @@ function createServer(opts = {}) {
     pendingHostRequests: db.prepare(`SELECT r.id,r.client_device_id,r.scopes,r.created,r.expires,d.name AS client_name,d.type AS client_type
       FROM host_access_requests r JOIN devices d ON d.id=r.client_device_id
       WHERE r.host_device_id=? AND r.user_id=? AND r.status='pending' AND r.expires>=? ORDER BY r.created`),
-    approveHostRequest: db.prepare("UPDATE host_access_requests SET status='redeemed',grant_id=?,expires=? WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
+    approveHostRequest: db.prepare("UPDATE host_access_requests SET status='redeemed',grant_id=? WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
     denyHostRequest: db.prepare("UPDATE host_access_requests SET status='denied' WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
     addHostGrant: db.prepare('INSERT INTO host_access_grants(id,user_id,client_device_id,host_device_id,scopes,created,expires) VALUES(?,?,?,?,?,?,?)'),
     hostGrant: db.prepare('SELECT * FROM host_access_grants WHERE id = ?'),
@@ -180,9 +180,10 @@ function createServer(opts = {}) {
     } catch { return null; }
   };
   const signHostGrant = (grant) => {
+    const expiresAt = Math.min(now() + HOST_GRANT_TTL, grant.expires);
     const head = b64u(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const body = b64u(JSON.stringify({ iss: 'cobre-server', aud: grant.host_device_id, sub: grant.client_device_id,
-      uid: grant.user_id, jti: grant.id, scope: JSON.parse(grant.scopes), exp: Math.floor(grant.expires / 1000) }));
+      uid: grant.user_id, jti: grant.id, scope: JSON.parse(grant.scopes), exp: Math.floor(expiresAt / 1000) }));
     const sig = crypto.createHmac('sha256', SECRET).update(`${head}.${body}`).digest('base64url');
     return `${head}.${body}.${sig}`;
   };
@@ -289,7 +290,8 @@ function createServer(opts = {}) {
     }
     throw new HttpError(503, 'code_unavailable', 'Não foi possível gerar um código agora. Tente novamente.');
   };
-  const HOST_GRANT_TTL = opts.hostGrantTtl ?? 10 * 60_000, HOST_REQUEST_TTL = opts.hostRequestTtl ?? 90_000;
+  const HOST_GRANT_TTL = opts.hostGrantTtl ?? 10 * 60_000, HOST_CONSENT_TTL = opts.hostConsentTtl ?? 30 * 24 * 60 * 60_000,
+    HOST_REQUEST_TTL = opts.hostRequestTtl ?? 90_000;
   const HOST_SCOPES = new Set(['library.read', 'playback.read', 'playback.control', 'stream']);
   const hostScopes = (value) => {
     if (value === undefined) return ['library.read', 'playback.read', 'stream'];
@@ -482,6 +484,7 @@ function createServer(opts = {}) {
       const hostRequestDeny = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests\/([0-9a-f-]{36})\/deny$/.exec(url.pathname);
       const hostRequestPoll = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-requests\/([0-9a-f-]{36})$/.exec(url.pathname);
       const hostGrantDelete = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-grants\/([0-9a-f-]{36})$/.exec(url.pathname);
+      const hostGrantRefresh = /^\/v1\/hosts\/([0-9a-f-]{36})\/access-grants\/([0-9a-f-]{36})\/refresh$/.exec(url.pathname);
       if (!handler && req.method === 'POST' && hostRequestCreate) {
         handler = async (rq, body) => {
           const a = auth(rq), client = q.device.get(a.did), host = q.device.get(hostRequestCreate[1]);
@@ -524,13 +527,13 @@ function createServer(opts = {}) {
             }
             const client = q.device.get(request.client_device_id);
             if (!client || client.user_id !== a.uid || !['mobile', 'tv'].includes(client.type)) throw new HttpError(410, 'client_revoked', 'O aparelho solicitante foi removido da conta.');
-            const id = crypto.randomUUID(), created = now(), expires = created + HOST_GRANT_TTL;
+            const id = crypto.randomUUID(), created = now(), expires = created + HOST_CONSENT_TTL;
             q.addHostGrant.run(id, a.uid, client.id, host.id, request.scopes, created, expires);
-            const updated = q.approveHostRequest.run(id, expires, request.id, host.id, a.uid, now());
+            const updated = q.approveHostRequest.run(id, request.id, host.id, a.uid, now());
             if (updated.changes !== 1) throw new HttpError(404, 'access_request_not_found', 'A solicitação expirou ou já foi usada.');
             return q.hostGrant.get(id);
           });
-          return [200, { status: 'approved', grantId: grant.id, expiresIn: Math.floor(HOST_GRANT_TTL / 1000),
+          return [200, { status: 'approved', grantId: grant.id, consentExpiresAt: grant.expires,
             hostDeviceId: grant.host_device_id, clientDeviceId: grant.client_device_id, scopes: JSON.parse(grant.scopes) }];
         };
       }
@@ -540,13 +543,28 @@ function createServer(opts = {}) {
           if (!request || request.host_device_id !== hostRequestPoll[1] || request.user_id !== a.uid || request.client_device_id !== a.did) {
             throw new HttpError(404, 'access_request_not_found', 'Solicitação de acesso não encontrada.');
           }
-          if (request.expires < now()) throw new HttpError(410, 'access_request_expired', 'A solicitação de acesso expirou.');
-          if (request.status === 'pending') return [200, { status: 'pending', expiresAt: request.expires }];
           if (request.status === 'denied') throw new HttpError(403, 'access_request_denied', 'O Desktop recusou esta solicitação.');
+          if (request.status === 'pending' && request.expires < now()) throw new HttpError(410, 'access_request_expired', 'A solicitação de acesso expirou.');
+          if (request.status === 'pending') return [200, { status: 'pending', expiresAt: request.expires }];
           if (request.status !== 'redeemed') throw new HttpError(410, 'access_request_expired', 'A solicitação de acesso não está mais ativa.');
           const grant = q.hostGrant.get(request.grant_id);
           if (!grant || grant.revoked || grant.expires < now()) throw new HttpError(410, 'host_grant_revoked', 'A autorização foi removida ou expirou.');
-          return [200, { status: 'redeemed', grantId: grant.id, grantToken: signHostGrant(grant), expiresAt: grant.expires,
+          return [200, { status: 'redeemed', grantId: grant.id, grantToken: signHostGrant(grant), expiresIn: Math.floor(Math.min(HOST_GRANT_TTL, grant.expires - now()) / 1000),
+            expiresAt: Math.min(now() + HOST_GRANT_TTL, grant.expires), consentExpiresAt: grant.expires,
+            hostDeviceId: grant.host_device_id, scopes: JSON.parse(grant.scopes) }];
+        };
+      }
+      if (!handler && req.method === 'POST' && hostGrantRefresh) {
+        handler = async (rq) => {
+          const a = auth(rq), grant = q.hostGrant.get(hostGrantRefresh[2]);
+          if (!grant || grant.host_device_id !== hostGrantRefresh[1] || grant.user_id !== a.uid || grant.client_device_id !== a.did ||
+              !['mobile', 'tv'].includes(q.device.get(a.did)?.type)) {
+            throw new HttpError(404, 'host_grant_not_found', 'Permissão não encontrada para este aparelho.');
+          }
+          if (grant.revoked || grant.expires < now()) throw new HttpError(410, 'host_grant_revoked', 'A permissão foi revogada ou expirou.');
+          return [200, { grantId: grant.id, grantToken: signHostGrant(grant),
+            expiresIn: Math.floor(Math.min(HOST_GRANT_TTL, grant.expires - now()) / 1000),
+            expiresAt: Math.min(now() + HOST_GRANT_TTL, grant.expires), consentExpiresAt: grant.expires,
             hostDeviceId: grant.host_device_id, scopes: JSON.parse(grant.scopes) }];
         };
       }

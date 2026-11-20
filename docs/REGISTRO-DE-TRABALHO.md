@@ -1,5 +1,12 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-20 — Cobre Server 0.5.0-beta.9 em preparação
+
+- Corrigido um bloqueio para reprodução contínua: consentimento aprovado pelo Desktop dura 30 dias, enquanto o token enviado ao host dura 10 minutos.
+- O aparelho autorizado renova o token pelo Cobre ID enquanto o consentimento existir; não precisa repetir o pedido/aprovação a cada 10 minutos. Revogação pelo host/painel e remoção do aparelho impedem renovações.
+- A solicitação mantém sua expiração curta original. O identificador de concessão é entregue no primeiro resgate para o cliente armazenar junto ao token.
+- Teste novo cobre expiração de token, renovação autorizada, isolamento por aparelho e expiração final do consentimento. Validação e publicação beta9 pendentes.
+
 ## 2026-11-20 — Cobre Server 0.5.0-beta.8 publicado
 
 - A central local ganhou a página **Acessos ao Desktop**, que lista conta, aparelho autorizado, host, escopos e validade das concessões ativas.

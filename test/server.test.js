@@ -224,11 +224,11 @@ test('acesso ao Desktop é aprovado pelo host, limitado, listável e revogável'
   assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: nextGrant.body.grantToken }, hostToken)).body.error, 'host_grant_revoked');
 });
 
-test('concessão temporária ao Desktop expira e deixa de ser validada', async (t) => {
+test('token de acesso expira e pode ser renovado enquanto o consentimento segue ativo', async (t) => {
   const expiryDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cobre-host-grant-expiry-'));
   t.after(() => fs.rmSync(expiryDir, { recursive: true, force: true }));
   let clock = Date.now();
-  const expiryServer = createServer({ dataDir: expiryDir, accessTtl: 3600, hostGrantTtl: 1000, now: () => clock });
+  const expiryServer = createServer({ dataDir: expiryDir, accessTtl: 3600, hostGrantTtl: 1000, hostConsentTtl: 2000, now: () => clock });
   await new Promise((ok) => expiryServer.listen(0, '127.0.0.1', ok));
   const local = 'http://127.0.0.1:' + expiryServer.address().port;
   const localCall = async (method, url, body, token) => {
@@ -247,6 +247,14 @@ test('concessão temporária ao Desktop expira e deixa de ser validada', async (
     const expired = await localCall('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, host.body.accessToken);
     assert.equal(expired.status, 401);
     assert.equal(expired.body.error, 'invalid_host_grant');
+    const refreshPath = `/v1/hosts/${host.body.device.id}/access-grants/${redeemed.body.grantId}/refresh`;
+    const renewed = await localCall('POST', refreshPath, {}, mobile.body.accessToken);
+    assert.equal(renewed.status, 200);
+    assert.equal((await localCall('POST', '/v1/hosts/access-grants/validate', { grantToken: renewed.body.grantToken }, host.body.accessToken)).status, 200);
+    assert.equal((await localCall('POST', refreshPath, {}, host.body.accessToken)).status, 404);
+    clock += 1001;
+    const consentExpired = await localCall('POST', refreshPath, {}, mobile.body.accessToken);
+    assert.equal(consentExpired.status, 410);
   } finally {
     await new Promise((resolve) => expiryServer.close(resolve));
     expiryServer.close_db();

@@ -1,5 +1,13 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.9 — permissões renováveis para uso contínuo
+
+- Aprovar o acesso no Desktop cria consentimento por 30 dias; o Mobile/TV recebe tokens de acesso assinados com validade curta de 10 minutos.
+- O aparelho autorizado pode renovar o token pelo Cobre ID sem repetir a aprovação enquanto o consentimento estiver válido.
+- Revogação pelo Desktop ou painel local invalida a renovação e as validações seguintes. Remover o aparelho também elimina a permissão.
+- A primeira resposta continua entregando o identificador da concessão para o aplicativo guardar e usar no endpoint de renovação.
+- Inclui teste de expiração/renovação do token, expiração do consentimento, isolamento por host e bloqueio da renovação por outro aparelho.
+
 ## 0.5.0-beta.8 — painel de acessos ao Desktop
 
 - A central do Cobre Server lista as concessões ativas por conta, aparelho, Desktop, permissões e prazo de validade.
