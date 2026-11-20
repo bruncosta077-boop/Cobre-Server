@@ -1,12 +1,12 @@
 # Registro de trabalho — Ecossistema Cobre
 
-## 2026-11-20 — Cobre Server 0.5.0-beta.11 preparado para publicação
+## 2026-11-20 — Cobre Server 0.5.0-beta.11 publicado
 
 - Refiz a identidade do ícone usando os sete tamanhos do ICO original do Desktop como base. O C cobre, o brilho e o fundo permanecem intactos fora da área central; substituí somente as barras centrais por três módulos Server menores, centralizados e monocromáticos.
 - Atualizei o ícone do aplicativo, o PNG do painel, a marca SVG, o gerador reproduzível, o número da versão, changelog, README, roadmap e quadro do ecossistema.
 - Conferência automatizada: 7 quadros no ICO original e no novo; nas comparações rasterizadas, nenhuma alteração ficou fora da área central em 6 quadros e 5 pixels de borda antialias ficaram na borda da máscara do quadro 256px; os pixels do C e do brilho permanecem iguais.
 - Validação local: testes 38/38; `npm audit --audit-level=moderate` sem vulnerabilidades; `git diff --check` passou; instalador Windows x64 e ZIP beta.11 foram empacotados localmente. Os executáveis são sem assinatura Authenticode, como as versões anteriores.
-- Aguardando publicação e confirmação dos ativos pelo GitHub Actions.
+- GitHub Actions da tag `44798792645` concluiu com sucesso; a [release beta.11](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.11) está pública com instalador, ZIP e checksums. SHA-256: EXE `d79e6686e00e99d2e61f044da7f1032e4db16890a04ca400690a881854bd6f15`; ZIP `c33e7ca6e3c43d49b425b1496368c51052d1d2536ba89e717ade80a324147151`.
 
 ## 2026-11-20 — Cobre Server 0.5.0-beta.9 publicado
 
