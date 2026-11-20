@@ -95,6 +95,17 @@ function createServer(opts = {}) {
     pollDeviceCode: db.prepare('UPDATE device_codes SET last_poll = ? WHERE code_hash = ?'),
     consumeDeviceCode: db.prepare("DELETE FROM device_codes WHERE code_hash = ? AND status = 'redeemed'"),
   };
+  const transaction = (fn) => {
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      const value = fn();
+      db.exec('COMMIT');
+      return value;
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
+  };
 
   // ---- senhas: scrypt (embutido no Node). Argon2id é o ideal; migrar quando houver na plataforma. ----
   const SC = { N: 32768, r: 8, p: 1, maxmem: 128 * 1024 * 1024 };
@@ -174,7 +185,13 @@ function createServer(opts = {}) {
   const readBody = (req) => new Promise((ok, no) => {
     let n = 0; const ch = [];
     req.on('data', (c) => { n += c.length; if (n > 16 * 1024) { no(new HttpError(413, 'too_large', 'Requisição grande demais.')); req.destroy(); } else ch.push(c); });
-    req.on('end', () => { try { ok(ch.length ? JSON.parse(Buffer.concat(ch).toString()) : {}); } catch { no(new HttpError(400, 'bad_json', 'JSON inválido.')); } });
+    req.on('end', () => {
+      try {
+        const value = ch.length ? JSON.parse(Buffer.concat(ch).toString()) : {};
+        if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('body precisa ser objeto');
+        ok(value);
+      } catch { no(new HttpError(400, 'bad_json', 'Envie um objeto JSON válido.')); }
+    });
     req.on('error', no);
   });
   const ipOf = (req) => (cfg.trustProxy && String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()) || req.socket.remoteAddress || '?';
@@ -298,11 +315,22 @@ function createServer(opts = {}) {
       const row = q.deviceCodeByUser.get(userCode);
       if (!row || row.expires < now() || row.status !== 'pending') throw new HttpError(404, 'code_not_found', 'Este código não existe, expirou ou já foi usado.');
       if (body.approve === true) {
-        const did = deviceIn({ id: a.uid }, { name: row.name, type: 'tv' });
-        q.approveDeviceCode.run(a.uid, did, row.code_hash);
+        const did = transaction(() => {
+          const current = q.deviceCodeByUser.get(userCode);
+          if (!current || current.expires < now() || current.status !== 'pending') throw new HttpError(404, 'code_not_found', 'Este código não existe, expirou ou já foi usado.');
+          const id = crypto.randomUUID();
+          q.addDevice.run(id, a.uid, current.name, 'tv', now(), 0);
+          const updated = q.approveDeviceCode.run(a.uid, id, current.code_hash);
+          if (updated.changes !== 1) throw new HttpError(404, 'code_not_found', 'Este código não existe, expirou ou já foi usado.');
+          return id;
+        });
         return [200, { ok: true, approved: true, device: { id: did, name: row.name, type: 'tv' } }];
       }
-      if (body.approve === false) { q.denyDeviceCode.run(a.uid, row.code_hash); return [200, { ok: true, approved: false }]; }
+      if (body.approve === false) {
+        const denied = q.denyDeviceCode.run(a.uid, row.code_hash);
+        if (denied.changes !== 1) throw new HttpError(404, 'code_not_found', 'Este código não existe, expirou ou já foi usado.');
+        return [200, { ok: true, approved: false }];
+      }
       throw new HttpError(400, 'bad_request', 'Informe approve como true ou false.');
     },
 
@@ -321,9 +349,15 @@ function createServer(opts = {}) {
       if (row.status !== 'approved' || !row.user_id || !row.device_id) throw new HttpError(400, 'expired_token', 'Este código não pode mais ser usado.');
       const device = q.device.get(row.device_id), user = q.userById.get(row.user_id);
       if (!device || !user || device.user_id !== user.id) throw new HttpError(400, 'access_denied', 'O dispositivo autorizado foi removido da conta.');
-      db.prepare("UPDATE device_codes SET status = 'redeemed' WHERE code_hash = ? AND status = 'approved'").run(hash);
-      const out = session(user, device.id);
-      q.consumeDeviceCode.run(hash);
+      const out = transaction(() => {
+        const current = q.deviceCode.get(hash);
+        if (!current || current.status !== 'approved' || current.expires < now()) throw new HttpError(400, 'expired_token', 'Este código não pode mais ser usado.');
+        const redeemed = db.prepare("UPDATE device_codes SET status = 'redeemed' WHERE code_hash = ? AND status = 'approved'").run(hash);
+        if (redeemed.changes !== 1) throw new HttpError(400, 'expired_token', 'Este código não pode mais ser usado.');
+        const tokens = session(user, device.id);
+        q.consumeDeviceCode.run(hash);
+        return tokens;
+      });
       return [200, out];
     },
   };

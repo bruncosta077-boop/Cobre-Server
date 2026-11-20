@@ -164,6 +164,61 @@ test('logout remove o próprio dispositivo', async () => {
   assert.equal((await call('GET', '/v1/devices', null, a.body.accessToken)).status, 401);
 });
 
+test('pareamento da TV aprova uma vez, cria o dispositivo e emite a sessão', async () => {
+  const account = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: CEL });
+  const request = await call('POST', '/v1/device/authorization', { device: { name: 'Cobre TV sala' } });
+  assert.equal(request.status, 200);
+  assert.match(request.body.deviceCode, /^[A-Za-z0-9_-]{40,60}$/);
+  assert.match(request.body.userCode, /^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+
+  const approval = await call('POST', '/v1/device/authorize', { userCode: request.body.userCode, approve: true }, account.body.accessToken);
+  assert.equal(approval.status, 200);
+  assert.equal(approval.body.device.type, 'tv');
+  assert.equal(approval.body.device.name, 'Cobre TV sala');
+
+  const redeemed = await call('POST', '/v1/device/token', { deviceCode: request.body.deviceCode });
+  assert.equal(redeemed.status, 200);
+  assert.ok(redeemed.body.accessToken && redeemed.body.refreshToken);
+  assert.equal(redeemed.body.device.id, approval.body.device.id);
+
+  const listed = await call('GET', '/v1/devices', null, account.body.accessToken);
+  assert.equal(listed.body.devices.filter((device) => device.type === 'tv' && device.name === 'Cobre TV sala').length, 1);
+  assert.equal((await call('POST', '/v1/device/token', { deviceCode: request.body.deviceCode })).body.error, 'expired_token');
+});
+
+test('pareamento recusado não cria um dispositivo', async () => {
+  const account = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: CEL });
+  const request = await call('POST', '/v1/device/authorization', { device: { name: 'TV recusada' } });
+  const denial = await call('POST', '/v1/device/authorize', { userCode: request.body.userCode, approve: false }, account.body.accessToken);
+  assert.equal(denial.status, 200);
+  assert.equal(denial.body.approved, false);
+  const token = await call('POST', '/v1/device/token', { deviceCode: request.body.deviceCode });
+  assert.equal(token.body.error, 'access_denied');
+  const devices = await call('GET', '/v1/devices', null, account.body.accessToken);
+  assert.equal(devices.body.devices.some((device) => device.type === 'tv' && device.name === 'TV recusada'), false);
+});
+
+test('pedidos simultâneos não aprovam nem resgatam o mesmo código duas vezes', async () => {
+  const account = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: CEL });
+  const request = await call('POST', '/v1/device/authorization', { device: { name: 'TV concorrente' } });
+  const approvals = await Promise.all([
+    call('POST', '/v1/device/authorize', { userCode: request.body.userCode, approve: true }, account.body.accessToken),
+    call('POST', '/v1/device/authorize', { userCode: request.body.userCode, approve: true }, account.body.accessToken),
+  ]);
+  assert.deepEqual(approvals.map((result) => result.status).sort(), [200, 404]);
+  const storedDevices = await call('GET', '/v1/devices', null, account.body.accessToken);
+  assert.equal(storedDevices.body.devices.filter((device) => device.name === 'TV concorrente').length, 1);
+
+  const redemptions = await Promise.all([
+    call('POST', '/v1/device/token', { deviceCode: request.body.deviceCode }),
+    call('POST', '/v1/device/token', { deviceCode: request.body.deviceCode }),
+  ]);
+  assert.deepEqual(redemptions.map((result) => result.status).sort(), [200, 400]);
+  const success = redemptions.find((result) => result.status === 200);
+  assert.ok(success.body.accessToken && success.body.refreshToken);
+  assert.equal(redemptions.find((result) => result.status === 400).body.error, 'expired_token');
+});
+
 test('relogin com o mesmo deviceId reaproveita o dispositivo e invalida o refresh antigo', async () => {
   const a = await call('POST', '/v1/login', { email: 'bia@exemplo.com', password: 'senha-forte-2', device: { id: undefined, name: 'Cel', type: 'mobile' } });
   const again = await call('POST', '/v1/login', { email: 'bia@exemplo.com', password: 'senha-forte-2', device: { id: a.body.device.id, name: 'Cel', type: 'mobile' } });
@@ -184,6 +239,11 @@ test('corpo grande, JSON inválido e rota inexistente', async () => {
   const big = await fetch(base + '/v1/login', { method: 'POST', body: 'x'.repeat(20000) }).catch(() => ({ status: 'reset' }));
   assert.ok(big.status === 413 || big.status === 'reset');
   assert.equal((await fetch(base + '/v1/login', { method: 'POST', body: '{ruim' })).status, 400);
+  for (const value of ['null', '[]', '"texto"', '42']) {
+    const response = await fetch(base + '/v1/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: value });
+    assert.equal(response.status, 400, `JSON não objeto deve ser recusado: ${value}`);
+    assert.equal((await response.json()).error, 'bad_json');
+  }
   assert.equal((await call('GET', '/v1/nada')).status, 404);
   assert.equal((await call('GET', '/health')).status, 200);
 });

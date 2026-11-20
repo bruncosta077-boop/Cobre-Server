@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
+## 0.5.0-beta.3 — pareamento Cobre TV mais seguro
+
+- Aprovação e resgate de códigos de dispositivo agora são operações transacionais: pedidos simultâneos não podem criar dispositivos duplicados nem emitir duas sessões para o mesmo código de TV.
+- JSON válido precisa ser um objeto; arrays, valores escalares e `null` são recusados com erro 400 claro.
+- Testes exercitam autorização aprovada, recusada, consumo único e corrida simultânea entre requisições.
+- 24/24 testes passam e a auditoria não reporta vulnerabilidades conhecidas.
+- Continua beta: a API da LAN usa HTTP sem criptografia, não retransmite áudio e ainda depende de validação e integração dos clientes reais. A TV permanece protótipo.
+
 ## 0.5.0-beta.2 — recuperação mais segura
 
 - Se a substituição de dados falhar após o encerramento do serviço, remove arquivos temporários abertos e reinicia a aplicação usando a cópia criptografada prévia como recuperação.
