@@ -2,6 +2,14 @@
 
 Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho pendente por aplicativo. Atualize junto a cada entrega; não marque itens apenas planejados como concluídos.
 
+## 2026-11-20 — backup de instância e auditoria do estado publicado
+
+- **Cobre Server:** o código 0.5.0-beta.1 adiciona cópia manual criptografada da base SQLite e `secret.key`, restauração validada, cópia prévia antes de substituir e reinicialização do serviço. Os 21 testes locais passaram; `npm audit --audit-level=moderate` reportou zero vulnerabilidades conhecidas; pacote Windows foi empacotado localmente e inclui `backup.js` em `app.asar`. A interação da restauração ainda não foi validada numa instalação Windows com dados reais. A API da LAN continua em HTTP sem criptografia, então o Server permanece beta e não está pronto para 1.0.
+- **Cobre Desktop:** 3.7.0 foi publicado com recuperação de preferências, cópia automática no perfil e exportar/restaurar manual. `webSecurity` permanece ativo. A conta Cobre ID fica separada da exportação manual e criptografada pelo Windows.
+- **Cobre Mobile:** 0.9.0 foi publicado com backup Android seletivo de banco local e cores. O certificado do APK 0.9.0 foi comparado com o APK 0.8.0 e é diferente; esta build não pode atualizar a anterior por cima. Não desinstalar para contornar a mensagem se houver dados locais importantes. Chave estável para futuras versões e restauração em aparelho real ainda faltam.
+- **Cobre TV:** continua protótipo 0.1.0 com álbuns demonstrativos; não autentica, não consulta Desktop e não toca áudio real. O README/CHANGELOG atual explicam esses limites e incluem logo/banner e @dilucas00.
+- **Próximas prioridades para a meta 1.0:** validar backup/restauração do Server pela interface; resolver TLS com confiança compatível nos três clientes; implementar concessão autorizada de acesso ao Desktop por dispositivo; criar/testar a versão TV utilizável; estabilizar assinatura do APK Mobile. Não anunciar o Server como release estável antes desses critérios.
+
 ## 2026-11-20 — diagnóstico de stream Desktop → Mobile
 
 - O Mobile 0.8.0 mede latência até o primeiro bloco e taxa recebida durante áudio vindo do endpoint LAN do Desktop; arquivos locais ficam fora da medição.

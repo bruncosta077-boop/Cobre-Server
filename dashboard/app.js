@@ -146,6 +146,52 @@ $('device-search').addEventListener('input', () => { if (snapshot) renderDevices
 $('refresh').addEventListener('click', refresh);
 $('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
 $('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
+let backupMode = 'export';
+function openBackupDialog(mode) {
+  backupMode = mode;
+  $('backup-title').textContent = mode === 'export' ? 'Salvar cópia criptografada' : 'Restaurar cópia';
+  $('backup-description').textContent = mode === 'export'
+    ? 'Crie uma senha com pelo menos 12 caracteres. Você precisará dela para restaurar este arquivo.'
+    : 'Informe a senha usada ao criar o arquivo. O Cobre valida o backup antes de alterar os dados.';
+  $('backup-confirm-wrap').hidden = mode !== 'export';
+  $('backup-passphrase').value = '';
+  $('backup-confirm').value = '';
+  $('backup-status').textContent = '';
+  $('backup-status').className = 'backup-status';
+  $('backup-modal').hidden = false;
+  $('backup-passphrase').focus();
+}
+function closeBackupDialog() { $('backup-modal').hidden = true; $('backup-form').reset(); }
+$('backup-export').addEventListener('click', () => openBackupDialog('export'));
+$('backup-restore').addEventListener('click', () => openBackupDialog('restore'));
+$('backup-close').addEventListener('click', closeBackupDialog);
+$('backup-cancel').addEventListener('click', closeBackupDialog);
+$('backup-modal').addEventListener('click', (event) => { if (event.target === $('backup-modal')) closeBackupDialog(); });
+$('backup-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const passphrase = $('backup-passphrase').value;
+  const status = $('backup-status');
+  const submit = $('backup-submit');
+  if (passphrase.length < 12) { status.textContent = 'A senha precisa ter pelo menos 12 caracteres.'; status.classList.add('error'); return; }
+  if (backupMode === 'export' && passphrase !== $('backup-confirm').value) { status.textContent = 'As senhas não coincidem.'; status.classList.add('error'); return; }
+  submit.disabled = true;
+  status.textContent = backupMode === 'export' ? 'Preparando a cópia criptografada…' : 'Validando a cópia…';
+  try {
+    const result = backupMode === 'export'
+      ? await window.cobreApp?.exportBackup(passphrase)
+      : await window.cobreApp?.restoreBackup(passphrase);
+    if (result) {
+      status.textContent = backupMode === 'export' ? 'Cópia salva com segurança.' : 'Restauração iniciada. O Cobre Server vai reiniciar.';
+      status.classList.add('success');
+      if (backupMode === 'export') window.setTimeout(closeBackupDialog, 1200);
+    } else if (backupMode === 'restore') {
+      status.textContent = 'Restauração cancelada; os dados atuais não foram alterados.';
+    }
+  } catch (error) {
+    status.textContent = error.message || 'Não foi possível processar esta cópia.';
+    status.classList.add('error');
+  } finally { submit.disabled = false; }
+});
 $('account-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const email = $('account-email').value.trim();

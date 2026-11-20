@@ -390,6 +390,11 @@ function createServer(opts = {}) {
       throw error;
     }
   };
+  server.createDatabaseSnapshot = (targetPath) => {
+    const safePath = path.resolve(targetPath).replaceAll("'", "''");
+    if (fs.existsSync(targetPath)) throw new Error('O destino do backup já existe.');
+    db.exec(`VACUUM INTO '${safePath}'`);
+  };
   server.close_db = () => db.close();
   return server;
 }

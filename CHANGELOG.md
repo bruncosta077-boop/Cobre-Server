@@ -2,6 +2,14 @@
 
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
+## 0.5.0-beta.1 — cópia de segurança criptografada
+
+- Configurações agora permitem exportar e restaurar contas, dispositivos, sessões e chave desta instância em arquivo protegido por senha.
+- A restauração valida autenticação e integridade SQLite antes de pedir confirmação; cria cópia criptografada dos dados atuais ao lado do arquivo escolhido e reinicia a instância.
+- O backup usa AES-256-GCM e derivação scrypt; exige senha de 12 a 256 caracteres. O limite do banco é 128 MB.
+- Inclui testes automatizados de conteúdo, senha incorreta, adulteração e dados inválidos.
+- Continua beta: API da LAN usa HTTP sem criptografia; transmissão de mídia não passa pelo Server; falta validar a experiência de backup/restauração na interface Windows com dados reais.
+
 ## 0.4.0-beta.4 — diagnóstico de áudio medido pelo Mobile
 
 - Painel distingue taxa real recebida e latência inicial do áudio da latência do catálogo.

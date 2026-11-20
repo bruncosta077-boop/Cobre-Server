@@ -10,11 +10,11 @@ O áudio deve sair diretamente do Desktop para o aparelho pela rede local. O Cob
 
 ## O que o código atual faz
 
-O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e permite que o Desktop aprove um código inicial de pareamento. O registro de presença informa que um aparelho enviou um heartbeat recentemente.
+O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e oferece endpoints para solicitar um código de TV e aprová-lo por outro dispositivo autenticado. O fluxo de solicitação/resgate ainda não está ligado nos clientes. O registro de presença informa somente que um aparelho enviou um heartbeat recentemente.
 
 O servidor local embutido no Desktop ainda usa seu próprio contrato de biblioteca e streaming. A integração por Cobre ID ainda não concede a um Mobile/TV acesso a um Desktop específico. O fluxo completo de solicitação e consulta do código também precisa ser implementado nos clientes.
 
-O Cobre Server 0.4.0-beta.2 é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio ainda dependem de medições reportadas pelos clientes.
+O Cobre Server é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio dependem de medições reportadas pelos clientes. A partir da 0.5.0-beta.1, a interface exporta e restaura a base e a chave em um arquivo autenticado e criptografado por senha.
 
 Desde a beta 0.4.0-beta.2, a API ainda faz bind para receber conexões LAN, mas recusa pedidos com origem fora de loopback e faixas privadas IPv4/IPv6. Isso não cifra o tráfego: senhas e tokens ainda podem ser observados dentro da própria rede local.
 

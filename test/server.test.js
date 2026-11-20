@@ -3,6 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('fs'); const os = require('os'); const path = require('path');
+const { DatabaseSync } = require('node:sqlite');
 const { createServer, isLanAddress } = require('../server');
 const { createDashboard } = require('../dashboard');
 
@@ -55,6 +56,17 @@ test('painel local cria uma conta Cobre ID sem associar um aparelho falso', asyn
   assert.equal(login.status, 200);
   assert.equal(login.body.user.email, account.email);
   await assert.rejects(srv.createAccount({ email: account.email, password: 'senha-forte-painel' }), (error) => error.status === 409);
+});
+
+test('snapshot da base inclui alterações confirmadas e recusa sobrescrever destino', async () => {
+  const snapshot = path.join(dir, 'snapshot.db');
+  srv.createDatabaseSnapshot(snapshot);
+  const copy = new DatabaseSync(snapshot, { readOnly: true });
+  try {
+    assert.equal(copy.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+    assert.equal(copy.prepare('SELECT COUNT(*) AS count FROM users').get().count, 2);
+  } finally { copy.close(); }
+  assert.throws(() => srv.createDatabaseSnapshot(snapshot), /já existe/);
 });
 
 test('chave local corrompida impede inicialização com assinatura fraca', () => {
@@ -186,6 +198,12 @@ test('painel local serve logo e bloqueia origens e hosts externos', async () => 
     assert.equal(brand.headers.get('content-type'), 'image/png');
     assert.equal(brand.headers.get('x-content-type-options'), 'nosniff');
     assert.equal(Buffer.from(await brand.arrayBuffer()).length, fs.statSync(path.join(__dirname, '..', 'dashboard', 'brand.png')).size);
+    const settings = await (await fetch(`${panelBase}/`)).text();
+    assert.match(settings, /backup-export/);
+    assert.match(settings, /backup-restore/);
+    const dashboardScript = await (await fetch(`${panelBase}/app.js`)).text();
+    assert.match(dashboardScript, /exportBackup/);
+    assert.match(dashboardScript, /restoreBackup/);
     assert.equal((await fetch(`${panelBase}/api/status`)).status, 200);
     const blockedHost = await new Promise((resolve, reject) => {
       const req = http.get({ hostname: '127.0.0.1', port: panel.address().port, path: '/', headers: { Host: 'evil.example' } }, (res) => {
