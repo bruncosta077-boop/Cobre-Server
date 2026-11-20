@@ -1,12 +1,14 @@
 # Registro de trabalho — Ecossistema Cobre
 
-## 2026-11-20 — atualizador do Cobre Server em preparação
+## 2026-11-20 — Cobre Server 0.5.0-beta.4 publicado
 
 - Implementado no Server um fluxo dentro de Configurações para consultar a release oficial, ler notas, baixar o instalador Windows x64, conferir SHA-256 e pedir confirmação antes de iniciar a instalação.
 - O processo principal valida origem da janela, versão, URL oficial, limite de tamanho e checksum; o hash é conferido novamente na hora de abrir. O atualizador guarda o instalador temporário fora da pasta do aplicativo e limpa resíduos próprios na inicialização.
 - A atualização por cima mantém os dados do usuário em `%APPDATA%`; isso não é backup por si só. O Server já tem exportação criptografada da instância.
 - Versão preparada: 0.5.0-beta.4. Validação local: 30/30 testes, verificações de sintaxe e `git diff --check`; `npm audit --audit-level=moderate`: zero vulnerabilidades conhecidas.
-- Ainda não publicado nem testado visualmente no Windows. CI e release com instalador/ZIP são necessários antes de dizer que usuários podem atualizar pelo app. Continua pendente TLS, assinatura digital e validação física do ecossistema.
+- Publicação verificada: [release 0.5.0-beta.4](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.4) contém instalador Windows x64, ZIP portátil e arquivo de checksums. CI Windows `44752004121` e publicação `44752434855` passaram.
+- Teste online do verificador, usando a versão beta3 como instalada, encontrou a beta4 e o instalador correto. As notas da release agora descrevem o que mudou; releases futuras passarão a extrair automaticamente a seção correspondente do changelog.
+- Não executamos a instalação na máquina do usuário nem fizemos validação visual. Continua pendente TLS, assinatura digital e validação física do ecossistema.
 
 ## 2026-11-20 — estado de atualização e retenção de dados
 

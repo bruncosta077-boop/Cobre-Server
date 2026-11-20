@@ -64,19 +64,31 @@ jobs:
       contents: write
       actions: read
     steps:
+      - name: Baixar changelog da versão marcada
+        uses: actions/checkout@v4
       - name: Baixar pacote verificado
         uses: actions/download-artifact@v4
         with:
           name: Cobre-Server-Windows-x64
           path: release
+      - name: Preparar notas desta versão
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os, re
+          version = os.environ['GITHUB_REF_NAME'].removeprefix('v')
+          changelog = open('CHANGELOG.md', encoding='utf-8').read()
+          match = re.search(r'^##\s+' + re.escape(version) + r'[^\n]*\n(.*?)(?=^##\s|\Z)', changelog, re.M | re.S)
+          if not match:
+              raise SystemExit(f'Notas da versão {version} não encontradas no CHANGELOG.md')
+          with open('release-notes.md', 'w', encoding='utf-8') as notes:
+              notes.write(match.group(1).strip() + '\n\nPacote Windows x64 verificado pelo GitHub Actions. Os dados do usuário ficam em `%APPDATA%`.')
+          PY
       - name: Publicar release para download permanente
         uses: softprops/action-gh-release@v2
         with:
           name: Cobre Server ${{ github.ref_name }}
-          body: |
-            Pacote Windows gerado e verificado automaticamente pelo GitHub Actions.
-
-            Inclui ZIP portátil, instalador e `checksums-sha256.txt`. Consulte `CHANGELOG.md` para as alterações e limites desta versão.
+          body_path: release-notes.md
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             release/Cobre-Server-*-Windows-x64.zip
