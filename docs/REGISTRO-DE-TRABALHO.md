@@ -63,7 +63,7 @@ Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho
 
 ### Cobre TV
 
-- Ainda não há repositório GitHub Cobre TV. A base foi importada para o repositório local `Cobre TV/cobre-tv/cobre-tv`, commit `0b01b7f`; inclui README, changelog, registro, logo/banner, wrapper verificado e workflow de compilação.
+- Repositório público [Cobre-TV](https://github.com/bruncosta077-boop/Cobre-TV) criado e sincronizado; convite de escrita para @dilucas00 enviado. O workflow `44684235826` passou após corrigir a permissão executável do `gradlew` (commit `ba39f41`).
 - Protótipo `0.1.0` compilado pelo Gradle Wrapper 8.9 (35 tarefas); APK debug 9.220.558 bytes, SHA-256 `c12c10a9bbf4a8fc36a82ba1a112d282540e1542f84bfe3122cb0bacd3efa5fc`; manifesto não pede Internet até haver função de rede.
 - Ainda usa álbuns falsos e não reproduz áudio, não pareia nem consulta Desktop/Cobre ID. Não foi testado em TV/emulador; não trate como app utilizável ou release.
 
