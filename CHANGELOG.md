@@ -1,5 +1,11 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.10 — identidade visual própria do Server
+
+- O ícone do aplicativo e do painel preserva a moldura Cobre em cobre, mas troca as barras de áudio por três módulos de servidor.
+- O símbolo do Server agora é visualmente distinto do player Desktop; o logo geral do ecossistema continua disponível nos materiais institucionais.
+- Inclui o SVG de origem e o script para regenerar PNG/ICO sem ferramentas externas.
+
 ## 0.5.0-beta.9 — permissões renováveis para uso contínuo
 
 - Aprovar o acesso no Desktop cria consentimento por 30 dias; o Mobile/TV recebe tokens de acesso assinados com validade curta de 10 minutos.

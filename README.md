@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="docs/images/cobre-logo-dark.svg" alt="Logo do Cobre" width="180">
+  <img src="docs/images/cobre-server-mark.svg" alt="Símbolo do Cobre Server" width="150">
 
 # Cobre Server
 
@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.9) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
+[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.10) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
 
 </div>
 
