@@ -1,6 +1,10 @@
 # Roadmap do Cobre Server
 
-## Versão publicada — 0.5.0-beta.9
+## Versão em publicação — 0.5.0-beta.10
+
+- [x] Identidade visual própria para o aplicativo Cobre Server, com símbolo de módulos centrais distinto do player Desktop.
+
+## Funcionalidades publicadas — até 0.5.0-beta.9
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.
