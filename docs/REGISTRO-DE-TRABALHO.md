@@ -2,6 +2,14 @@
 
 Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho pendente por aplicativo. Atualize junto a cada entrega; não marque itens apenas planejados como concluídos.
 
+## 2026-11-20 — diagnóstico de stream Desktop → Mobile
+
+- O Mobile 0.8.0 mede latência até o primeiro bloco e taxa recebida durante áudio vindo do endpoint LAN do Desktop; arquivos locais ficam fora da medição.
+- O heartbeat Cobre ID já aceita esses dois campos. A tela do Server agora os apresenta como diagnóstico do stream, separado da resposta do catálogo e da presença.
+- Testes automatizados do Server: 16/16 passaram. Build local do APK foi impedida pelo Java local incompatível (Java 8 selecionado; JDK embutido é 25); workflow Android com Java 17 está em execução.
+- Limite: o Cobre Server não recebe nem retransmite áudio; reprodução continua exigindo que Desktop e Mobile estejam na mesma rede. A taxa no aparelho ainda precisa de validação prática após instalar o APK.
+- Próximas prioridades: validar a medição em aparelho real; desenhar relay seguro para redes diferentes; organizar a tela de configurações do Desktop em página própria e acrescentar backup/restauração das preferências sem exportar credenciais.
+
 ## 2026-11-19 — Cobre Server 0.4.0-beta.1 preparado para validação
 
 - O serviço foi transformado em aplicativo desktop Electron: janela própria, controle seguro de saída e acesso à pasta de dados.

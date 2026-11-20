@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
+## 0.4.0-beta.4 — diagnóstico de áudio medido pelo Mobile
+
+- Painel distingue taxa real recebida e latência inicial do áudio da latência do catálogo.
+- As medições vêm do Cobre Mobile durante reprodução de faixas do Desktop; heartbeat sem stream não é apresentado como transmissão.
+- O Server continua coordenando contas/presença, sem receber nem retransmitir áudio; o stream segue direto pela rede local.
+
 ## 0.4.0-beta.3 — criação local de contas Cobre ID
 
 - O painel do Cobre Server agora cria contas Cobre ID com email e senha, sem cadastrar um aparelho fictício.

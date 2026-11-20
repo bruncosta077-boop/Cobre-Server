@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.3) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
+[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.4.0-beta.4) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
@@ -26,7 +26,7 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.3/Cobre-Server-0.4.0-beta.3-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.3/Cobre-Server-0.4.0-beta.3-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.3/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
+O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release, estão disponíveis o [ZIP portátil](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.4/Cobre-Server-0.4.0-beta.4-Windows-x64.zip), o [instalador Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.4/Cobre-Server-0.4.0-beta.4-Windows-x64.exe) e os [checksums SHA-256](https://github.com/bruncosta077-boop/Cobre-Server/releases/download/v0.4.0-beta.4/checksums-sha256.txt). Compare o hash do arquivo antes de abrir.
 
 O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 
@@ -36,10 +36,10 @@ O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a 
 - Dispositivos vinculados, tipo, plataforma, versão e último heartbeat.
 - Filtros de aparelhos online/offline e busca.
 - Tempo de resposta da API local e endereços/portas usados.
-- Diagnóstico explicando presença da conta versus streaming real.
+- Diagnóstico com taxa de áudio recebida e latência inicial informadas pelo Mobile durante stream do Desktop; presença e latência do catálogo permanecem métricas separadas.
 - Atalho para abrir a pasta de dados e opção segura para encerrar o servidor.
 
-O aplicativo atual **não mede taxa de áudio nem retransmite músicas**. Essas medidas só poderão ser exibidas quando os clientes Desktop e Mobile/TV as reportarem.
+O painel mostra medidas reportadas pelo Mobile durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local.
 
 ## Como os aplicativos se conectam
 

@@ -102,16 +102,26 @@ async function refresh() {
       ? snapshot.lanAddresses.map((address) => `http://${address}:${snapshot.apiPort || 8080}`).join(' · ')
       : `http://localhost:${snapshot.apiPort || 8080}`;
     for (const id of ['side-version', 'footer-version']) $(id).textContent = `v${snapshot.version}`;
-    const catalogSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.catalogResponseMs));
-    if (catalogSamples.length) {
-      const average = Math.round(catalogSamples.reduce((sum, device) => sum + device.catalogResponseMs, 0) / catalogSamples.length);
-      $('stream-title').textContent = `Catálogo do Desktop: ${average} ms`;
-      $('stream-note').textContent = `Média de ${catalogSamples.length} consulta(s) enviada(s) pelo Mobile. Essa medida não representa a velocidade do áudio.`;
-      $('stream-pill').textContent = 'Resposta do catálogo';
+    const streamSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 && Number.isSafeInteger(device.streamLatencyMs));
+    if (streamSamples.length) {
+      const averageRate = Math.round(streamSamples.reduce((sum, device) => sum + device.streamBytesPerSecond, 0) / streamSamples.length);
+      const averageLatency = Math.round(streamSamples.reduce((sum, device) => sum + device.streamLatencyMs, 0) / streamSamples.length);
+      const rateLabel = averageRate >= 1_000_000 ? `${(averageRate / 1_000_000).toFixed(2)} MB/s` : `${Math.round(averageRate / 1_000)} KB/s`;
+      $('stream-title').textContent = `Recepção de áudio: ${rateLabel}`;
+      $('stream-note').textContent = `Leitura informada por ${streamSamples.length} aparelho(s) Mobile; latência média para o primeiro dado: ${averageLatency} ms. Mede o trecho Desktop → Mobile na rede local, não a conexão com o Cobre Server.`;
+      $('stream-pill').textContent = 'Medição do Mobile';
     } else {
-      $('stream-title').textContent = 'Streaming ainda sem medição';
-      $('stream-note').textContent = 'O painel mede a resposta da API local. A taxa e a estabilidade do áudio precisam ser reportadas pelo Desktop e pelo aparelho que reproduz.';
-      $('stream-pill').textContent = 'Aguardando métricas dos clientes';
+      const catalogSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.catalogResponseMs));
+      if (catalogSamples.length) {
+        const average = Math.round(catalogSamples.reduce((sum, device) => sum + device.catalogResponseMs, 0) / catalogSamples.length);
+        $('stream-title').textContent = `Catálogo do Desktop: ${average} ms`;
+        $('stream-note').textContent = `Média de ${catalogSamples.length} consulta(s) enviada(s) pelo Mobile. Essa medida não representa a velocidade do áudio.`;
+        $('stream-pill').textContent = 'Resposta do catálogo';
+      } else {
+        $('stream-title').textContent = 'Streaming aguardando reprodução';
+        $('stream-note').textContent = 'Ao tocar uma faixa do computador no Mobile, a próxima presença Cobre ID enviará a taxa e a latência medidas no próprio recebimento do áudio.';
+        $('stream-pill').textContent = 'Sem reprodução medida';
+      }
     }
     $('desktop-state').textContent = snapshot.devices.some((d) => d.type === 'desktop' && d.online) ? 'Online' : 'Aguardando';
     $('client-state').textContent = snapshot.devices.some((d) => ['mobile', 'tv'].includes(d.type) && d.online) ? 'Online' : 'Aguardando';
