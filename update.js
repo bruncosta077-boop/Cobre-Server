@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const RELEASES_URL = 'https://api.github.com/repos/bruncosta077-boop/Cobre-Server/releases?per_page=30';
+const RELEASES_ATOM_URL = 'https://github.com/bruncosta077-boop/Cobre-Server/releases.atom';
 const MAX_INSTALLER_BYTES = 250 * 1024 * 1024;
 const REDIRECT_HOSTS = new Set(['github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com']);
 
@@ -63,12 +64,85 @@ function selectLatestRelease(releases) {
 }
 
 async function fetchReleases(fetcher = fetch) {
-  const response = await fetcher(RELEASES_URL, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Cobre-Server-Updater' },
+  try {
+    const response = await fetcher(RELEASES_URL, {
+      headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Cobre-Server-Updater' },
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (response.ok) return response.json();
+    if (![403, 429].includes(response.status)) throw new Error('A API do GitHub não respondeu.');
+  } catch {}
+  try { return await fetchAtomReleases(fetcher); }
+  catch { throw new Error('Não foi possível consultar as versões do Cobre Server pela API nem pelo feed oficial do GitHub.'); }
+}
+
+function decodeXml(value) {
+  return String(value || '').replace(/&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos);/gi, (entity, code) => {
+    if (code[0] === '#') {
+      const hex = code[1]?.toLowerCase() === 'x';
+      const point = Number.parseInt(code.slice(hex ? 2 : 1), hex ? 16 : 10);
+      return Number.isFinite(point) && point <= 0x10ffff ? String.fromCodePoint(point) : '';
+    }
+    return ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" })[code.toLowerCase()];
+  });
+}
+
+function atomPlainText(html) {
+  return decodeXml(decodeXml(html)
+    .replace(/<li\b[^>]*>/gi, '- ')
+    .replace(/<\/(?:li|p|ul|h[1-6])\s*>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g, ''))
+    .replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function parseAtomReleases(xml) {
+  return [...String(xml || '').matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/gi)].flatMap((match) => {
+    const entry = match[1];
+    const linkTag = /<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhref="([^"]+)")[^>]*>/i.exec(entry);
+    const releaseUrl = linkTag && decodeXml(linkTag[1]);
+    let release;
+    try { release = new URL(releaseUrl); } catch { return []; }
+    if (release.protocol !== 'https:' || release.hostname !== 'github.com' || release.pathname.split('/').slice(0, 4).join('/') !== '/bruncosta077-boop/Cobre-Server/releases') return [];
+    const tag = decodeURIComponent(release.pathname.split('/').pop() || '');
+    const version = tag.replace(/^v/, '');
+    if (!parseVersion(version)) return [];
+    const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(entry)?.[1] || `Cobre Server ${version}`;
+    const body = /<content\b[^>]*>([\s\S]*?)<\/content>/i.exec(entry)?.[1] || '';
+    const updated = /<updated\b[^>]*>([\s\S]*?)<\/updated>/i.exec(entry)?.[1] || '';
+    return [{
+      tag_name: tag, name: decodeXml(title), body: atomPlainText(body),
+      published_at: decodeXml(updated), html_url: release.href,
+      prerelease: Boolean(parseVersion(version).prerelease), draft: false, assets: [],
+    }];
+  });
+}
+
+async function fetchAtomReleases(fetcher) {
+  const response = await fetcher(RELEASES_ATOM_URL, {
+    headers: { Accept: 'application/atom+xml, application/xml;q=0.9', 'User-Agent': 'Cobre-Server-Updater' },
     signal: AbortSignal.timeout(20_000),
   });
-  if (!response.ok) throw new Error(response.status === 403 ? 'O GitHub limitou as consultas. Tente novamente em alguns minutos.' : 'Não foi possível consultar as versões do Cobre Server.');
-  return response.json();
+  if (!response.ok || !response.body) throw new Error('Feed Atom indisponível.');
+  const xml = await response.text();
+  if (Buffer.byteLength(xml) > 2 * 1024 * 1024) throw new Error('Feed Atom excede o limite permitido.');
+  const candidates = parseAtomReleases(xml).sort((a, b) => compareVersions(releaseVersion(b), releaseVersion(a)));
+  for (const release of candidates) {
+    const version = releaseVersion(release);
+    const name = `Cobre-Server-${version}-Windows-x64.exe`;
+    const url = `https://github.com/bruncosta077-boop/Cobre-Server/releases/download/${release.tag_name}/${name}`;
+    try {
+      const head = await fetchDownload(url, fetcher, MAX_INSTALLER_BYTES, 'HEAD');
+      const size = Number(head.headers.get('content-length'));
+      if (!Number.isSafeInteger(size) || size <= 0 || size > MAX_INSTALLER_BYTES) continue;
+      release.assets = [
+        { name, size, digest: '', browser_download_url: url },
+        { name: 'checksums-sha256.txt', size: 0, digest: '', browser_download_url: `https://github.com/bruncosta077-boop/Cobre-Server/releases/download/${release.tag_name}/checksums-sha256.txt` },
+      ];
+      return [release];
+    } catch {}
+  }
+  throw new Error('O feed não contém uma release compatível com Windows x64.');
 }
 
 async function checkForUpdate(currentVersion, fetcher = fetch) {
@@ -115,7 +189,7 @@ async function getExpectedDigest(release, asset, fetcher) {
   return expected;
 }
 
-async function fetchDownload(url, fetcher, maxBytes) {
+async function fetchDownload(url, fetcher, maxBytes, method = 'GET') {
   let target;
   try { target = new URL(url); } catch { throw new Error('O endereço do instalador é inválido.'); }
   if (target.protocol !== 'https:' || target.hostname !== 'github.com' || (target.port && target.port !== '443') ||
@@ -124,6 +198,7 @@ async function fetchDownload(url, fetcher, maxBytes) {
   }
   for (let redirects = 0; redirects <= 4; redirects++) {
     const response = await fetcher(target, {
+      method,
       headers: { Accept: 'application/octet-stream', 'User-Agent': 'Cobre-Server-Updater' },
       redirect: 'manual', signal: AbortSignal.timeout(120_000),
     });
@@ -135,7 +210,7 @@ async function fetchDownload(url, fetcher, maxBytes) {
       if (target.protocol !== 'https:' || (target.port && target.port !== '443') || !REDIRECT_HOSTS.has(target.hostname)) throw new Error('O instalador foi redirecionado para um endereço não confiável.');
       continue;
     }
-    if (!response.ok || !response.body) throw new Error('Não foi possível baixar o instalador oficial.');
+    if (!response.ok || (method !== 'HEAD' && !response.body)) throw new Error('Não foi possível baixar o instalador oficial.');
     const length = Number(response.headers.get('content-length'));
     if (Number.isFinite(length) && length > maxBytes) throw new Error('O instalador excede o tamanho máximo permitido.');
     return response;
@@ -203,4 +278,4 @@ async function cleanupTemporaryInstallers(tempDirectory) {
     .map((name) => fs.promises.rm(path.join(tempDirectory, name), { force: true }).catch(() => {})));
 }
 
-module.exports = { compareVersions, parseVersion, selectLatestRelease, checksumFromText, checkForUpdate, prepareUpdate, verifyDownloadedUpdate, cleanupTemporaryInstallers };
+module.exports = { compareVersions, parseVersion, selectLatestRelease, checksumFromText, parseAtomReleases, checkForUpdate, prepareUpdate, verifyDownloadedUpdate, cleanupTemporaryInstallers };

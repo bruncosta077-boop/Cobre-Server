@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão em preparação — 0.5.0-beta.5
+## Versão preparada — 0.5.0-beta.6
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.

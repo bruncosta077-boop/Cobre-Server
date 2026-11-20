@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { compareVersions, selectLatestRelease, checksumFromText, prepareUpdate, verifyDownloadedUpdate } = require('../update');
+const { compareVersions, selectLatestRelease, checksumFromText, parseAtomReleases, checkForUpdate, prepareUpdate, verifyDownloadedUpdate } = require('../update');
 
 test('compara estáveis e pré-releases conforme a ordem de versões', () => {
   assert.equal(compareVersions('0.5.0-beta.10', '0.5.0-beta.3'), 1);
@@ -27,6 +27,48 @@ test('lê somente a soma do arquivo esperado no manifesto', () => {
   const digest = 'a'.repeat(64);
   assert.equal(checksumFromText(`${digest}  cobre.exe\n${'b'.repeat(64)}  Cobre-Server.exe`, 'Cobre-Server.exe'), 'b'.repeat(64));
   assert.equal(checksumFromText(`${digest}  outro.exe`, 'Cobre-Server.exe'), null);
+});
+
+test('lê versões e notas do feed Atom oficial sem executar HTML', () => {
+  const feed = '<feed><entry><link rel="alternate" href="https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.2.0"/><title>Cobre Server v1.2.0</title><updated>2026-11-20T14:00:00Z</updated><content type="html">&lt;p&gt;Notas &amp;amp; segurança&lt;/p&gt;&lt;ul&gt;&lt;li&gt;HTTPS&lt;/li&gt;&lt;/ul&gt;</content></entry></feed>';
+  const [release] = parseAtomReleases(feed);
+  assert.equal(release.tag_name, 'v1.2.0');
+  assert.equal(release.prerelease, false);
+  assert.match(release.body, /Notas & segurança/);
+  assert.match(release.body, /HTTPS/);
+  assert.deepEqual(parseAtomReleases('<feed><entry><link rel="alternate" href="https://evil.example/releases/tag/v2.0.0"/></entry></feed>'), []);
+});
+
+test('limite da API GitHub usa feed oficial para localizar e validar a atualização', async (t) => {
+  const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'cobre-update-atom-'));
+  t.after(() => fs.rmSync(tempDirectory, { recursive: true, force: true }));
+  const bytes = Buffer.from('installer bytes validated from Atom release');
+  const digest = crypto.createHash('sha256').update(bytes).digest('hex');
+  const name = 'Cobre-Server-1.2.0-Windows-x64.exe';
+  const checksumText = `${digest}  ${name}\n`;
+  const feed = '<feed><entry><link rel="alternate" href="https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.2.0"/><title>Cobre Server v1.2.0</title><updated>2026-11-20T14:00:00Z</updated><content type="html">&lt;p&gt;TLS release notes&lt;/p&gt;</content></entry></feed>';
+  const fetcher = async (url, options = {}) => {
+    const target = new URL(String(url));
+    if (target.hostname === 'api.github.com') return new Response('{"message":"API rate limit exceeded"}', { status: 403 });
+    if (target.hostname === 'github.com' && target.pathname.endsWith('/releases.atom')) return new Response(feed, { status: 200 });
+    if (target.hostname === 'github.com' && target.pathname.includes('/releases/download/')) {
+      const artifact = target.pathname.endsWith('checksums-sha256.txt') ? 'checksums' : 'installer';
+      return new Response(null, { status: 302, headers: { location: `https://release-assets.githubusercontent.com/${options.method === 'HEAD' ? 'head' : artifact}` } });
+    }
+    if (target.hostname === 'release-assets.githubusercontent.com') {
+      if (target.pathname === '/head') return new Response(null, { status: 200, headers: { 'Content-Length': String(bytes.length) } });
+      if (target.pathname === '/checksums') return new Response(checksumText, { status: 200 });
+      if (target.pathname === '/installer') return new Response(bytes, { status: 200, headers: { 'Content-Length': String(bytes.length) } });
+    }
+    throw new Error('unexpected host');
+  };
+  const update = await checkForUpdate('1.1.0', fetcher);
+  assert.equal(update.available, true);
+  assert.equal(update.latestVersion, '1.2.0');
+  assert.match(update.notes, /TLS release notes/);
+  const prepared = await prepareUpdate('1.2.0', '1.1.0', tempDirectory, fetcher);
+  assert.equal(prepared.digest, digest);
+  assert.equal(await verifyDownloadedUpdate(prepared), true);
 });
 
 test('prepara somente o instalador oficial após conferir tamanho e SHA-256', async (t) => {

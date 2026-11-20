@@ -1,5 +1,11 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.6 — atualizador resiliente ao limite do GitHub
+
+- Quando a API pública do GitHub responde com limite de consultas, o atualizador usa o feed Atom oficial de releases como alternativa.
+- A alternativa aceita apenas tags e downloads do repositório oficial, confirma a disponibilidade/tamanho do instalador Windows x64 e mantém a validação SHA-256 antes de liberar o arquivo.
+- Inclui testes cobrindo leitura segura das notas e o fluxo completo de fallback, manifesto, download e integridade.
+
 ## 0.5.0-beta.5 — HTTPS configurável
 
 - A tela Configurações importa certificado e chave privada PEM, confere validade e correspondência e guarda os arquivos no perfil local do Windows.

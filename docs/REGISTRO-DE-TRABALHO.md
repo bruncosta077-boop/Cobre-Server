@@ -1,12 +1,21 @@
 # Registro de trabalho — Ecossistema Cobre
 
-## 2026-11-20 — HTTPS configurável no Cobre Server em preparação
+## 2026-11-20 — Cobre Server 0.5.0-beta.6 preparado
+
+- O atualizador agora recorre ao feed Atom oficial do GitHub quando a API pública responde com limite de consultas ou falha temporária.
+- O fallback só aceita releases e ativos do repositório oficial, confirma a disponibilidade e o tamanho do instalador Windows x64, e continua exigindo SHA-256 antes de liberar o download.
+- Testes cobrem parser do feed, rejeição de links externos e o fluxo API limitada → Atom → HEAD do instalador → manifesto → download → verificação SHA-256.
+- Validação local: 36/36 testes passaram; `npm audit --audit-level=moderate` encontrou zero vulnerabilidades. A consulta online do código beta6 foi confirmada durante a validação local: apesar do limite da API, o fallback retornou a release beta5 e identificou o instalador oficial.
+- Versão beta6 preparada; publicação depende do build e workflow do GitHub Actions.
+## 2026-11-20 — Cobre Server 0.5.0-beta.5 publicado
 
 - A tela Configurações agora oferece importar um certificado e uma chave privada PEM. A validação confere formato, validade temporal e correspondência da chave antes de salvar no perfil local.
 - HTTPS passa a substituir HTTP na porta da API, sem deixar um listener HTTP paralelo. A configuração reinicia o aplicativo, altera os endereços exibidos e mantém os dados em `%APPDATA%`.
 - O painel explica que os clientes precisam usar URL/certificado confiáveis e que certificados autoassinados não são confiáveis automaticamente. Desativar HTTPS exige confirmação e reinicia explicitamente em HTTP.
 - A integração HTTPS local gerou um certificado de teste no Windows, salvou/recarregou a configuração e consultou `/health` via HTTPS. A suíte completa passou 34/34; `npm audit --audit-level=moderate` não apontou vulnerabilidades.
-- Próxima versão preparada: 0.5.0-beta.5. Build/empacotamento CI ainda pendente; também falta validar login HTTPS nos aparelhos Desktop, Mobile e TV reais. O Server segue sem relay de mídia.
+- A versão [0.5.0-beta.5 foi publicada](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.5) com instalador Windows x64, ZIP portátil e checksums. Build/empacotamento `44757103582` e release `44757653578` passaram.
+- O verificador do app consultou GitHub enquanto o limite público de API desta rede estava esgotado, então a descoberta automática da beta5 não pôde ser confirmada online nesta sessão. A release/links e os testes locais estão verificados; testar o botão em outra janela de limite confirma o caminho de UI. A suíte offline cobre seleção e verificação de ativos.
+- Ainda falta validar login HTTPS nos aparelhos Desktop, Mobile e TV reais. O Server segue sem relay de mídia.
 
 ## 2026-11-20 — Cobre Server 0.5.0-beta.4 publicado
 
