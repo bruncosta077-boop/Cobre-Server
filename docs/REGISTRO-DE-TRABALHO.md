@@ -1,11 +1,12 @@
 # Registro de trabalho — Ecossistema Cobre
 
-## 2026-11-20 — Cobre Server 0.5.0-beta.9 em preparação
+## 2026-11-20 — Cobre Server 0.5.0-beta.9 publicado
 
 - Corrigido um bloqueio para reprodução contínua: consentimento aprovado pelo Desktop dura 30 dias, enquanto o token enviado ao host dura 10 minutos.
 - O aparelho autorizado renova o token pelo Cobre ID enquanto o consentimento existir; não precisa repetir o pedido/aprovação a cada 10 minutos. Revogação pelo host/painel e remoção do aparelho impedem renovações.
 - A solicitação mantém sua expiração curta original. O identificador de concessão é entregue no primeiro resgate para o cliente armazenar junto ao token.
-- Teste novo cobre expiração de token, renovação autorizada, isolamento por aparelho e expiração final do consentimento. Validação e publicação beta9 pendentes.
+- Teste novo cobre expiração de token, renovação autorizada, isolamento por aparelho e expiração final do consentimento. Suíte: 38/38; auditoria sem vulnerabilidades; verificações de sintaxe e whitespace passaram. Build local Windows NSIS+ZIP passou.
+- GitHub Actions `44780519579` (branch) e `44781018492` (tag) passaram. A [release beta9](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.9) publica instalador e ZIP Windows x64, ambos HTTP 200. Checksums oficiais: EXE `9b2f51f91f42d9e705ea3ab0dd7167bf28a478a19d4425e23fc90bafd4248a30`; ZIP `334dceca8b6749ce37c17111a265d755e73f675dcc255b5b1940fbd792474c1c`.
 
 ## 2026-11-20 — Cobre Server 0.5.0-beta.8 publicado
 
