@@ -80,11 +80,11 @@ npm test
 
 O aplicativo escuta a API em `0.0.0.0:8080` para que os clientes da rede local possam acessá-la, mas recusa conexões cujo IP de origem não seja loopback ou uma faixa local privada. O painel administrativo usa `127.0.0.1:8788` e não é publicado na rede. Essa barreira reduz exposição acidental, mas não substitui HTTPS, firewall ou segurança do roteador. Os dados da instância ficam em `%APPDATA%\Cobre Server\data`, incluindo banco e chave de assinatura. **Não compartilhe essa pasta.** Perder a chave invalida as sessões existentes.
 
-O serviço atual usa HTTP sem criptografia. Não encaminhe a porta para a internet nem use em Wi-Fi público. Estado “online” significa heartbeat recente; não comprova que o Desktop está acessível nem que o áudio está tocando.
+O serviço pode usar HTTP na rede local ou HTTPS com certificado e chave PEM configurados em **Configurações → HTTPS**. HTTPS substitui HTTP na porta da API; depois de reiniciar, atualize a URL nos aplicativos. Use um certificado válido, confiável pelos aparelhos e cujo nome/IP corresponda ao endereço usado. Certificado autoassinado não é aceito automaticamente pelos clientes. HTTPS protege o tráfego local, mas não habilita acesso pela internet: a API continua recusando origens públicas. Sem HTTPS, use somente uma rede Wi-Fi confiável. Estado “online” significa heartbeat recente; não comprova que o Desktop está acessível nem que o áudio está tocando.
 
 Em **Configurações → Cópia de segurança**, exporte um arquivo `.cobre-backup` periodicamente. Ele contém contas, dispositivos, sessões e a chave desta instância, criptografados com AES-256-GCM e chave derivada por scrypt. Use uma senha exclusiva com pelo menos 12 caracteres e guarde o arquivo e a senha separadamente. Sem a senha, não é possível recuperar o arquivo. A restauração valida o banco, pede confirmação e salva uma cópia criptografada do estado atual junto do arquivo escolhido antes de substituir os dados e reiniciar o serviço. Limite do banco por cópia: 128 MB.
 
-O backup não inclui músicas, capas ou dados do Desktop/Mobile/TV. Perder a chave fora de um backup válido invalida as sessões existentes.
+O backup não inclui músicas, capas ou dados do Desktop/Mobile/TV, nem a chave privada do certificado HTTPS. Guarde separadamente o certificado e a chave importados para HTTPS. Perder a chave de assinatura fora de um backup válido invalida as sessões existentes.
 
 ## Estrutura
 

@@ -1,6 +1,6 @@
 # Roadmap do Cobre Server
 
-## Versão atual — 0.5.0-beta.4 publicada
+## Versão em preparação — 0.5.0-beta.5
 
 - [x] Contas, login, sessões com renovação e dispositivos vinculados.
 - [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.
@@ -14,7 +14,8 @@
 - [ ] Acesso autorizado do Mobile/TV à biblioteca e ao áudio do Desktop.
 - [x] Receber e exibir taxa e latência inicial do stream reportadas pelo Mobile, separadas de presença e latência do catálogo.
 - [ ] Métricas de erros do Desktop, suporte equivalente na TV e validação integrada em uso real.
-- [ ] HTTPS/TLS com configuração de confiança utilizável pelos clientes.
+- [x] HTTPS/TLS opcional com certificado confiável PEM, ativação na interface e API HTTPS-only após reinício.
+- [ ] Validar certificado/URL e login Cobre ID em Desktop, Mobile e TV físicos.
 - [x] Atualizador integrado para releases oficiais Windows x64, com notas, SHA-256 e confirmação antes de instalar.
 - [ ] Assinatura digital do aplicativo Windows.
 - [ ] Validar backup/restauração pela interface Windows com instalação e dados reais.
@@ -25,7 +26,7 @@
 2. Identificar cada Desktop host e emitir uma permissão curta, limitada e revogável.
 3. Integrar autorização Cobre ID ao acesso de biblioteca e áudio do Desktop.
 4. Concluir biblioteca e playback reais na TV, mantendo o áudio direto entre Desktop e aparelho.
-5. Implementar transporte TLS com confiança compatível nos clientes antes de uso fora de uma LAN confiável.
+5. Validar em aparelhos reais certificado confiável, URLs e login Cobre ID via HTTPS antes de uso fora de uma LAN confiável.
 
 ## Aplicativo Cobre Server
 
@@ -35,7 +36,7 @@
 - [x] Exportação/restauração criptografada da base e chave local, com confirmação e cópia de recuperação.
 - [ ] Validar backup/restauração pela interface Windows com instalação descartável e dados de teste.
 - [ ] Assinatura digital e atualizações no próprio aplicativo.
-- [ ] Configuração assistida de rede, logs sanitizados e HTTPS utilizável pelos clientes.
+- [ ] Validação completa de HTTPS com Desktop, Mobile e TV, além de configuração assistida de rede e logs sanitizados.
 
 ## Critérios de pronto
 

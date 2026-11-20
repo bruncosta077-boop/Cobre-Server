@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld('cobreApp', {
   checkUpdate: () => ipcRenderer.invoke('cobre:update-check'),
   downloadUpdate: (version) => ipcRenderer.invoke('cobre:update-download', version),
   installUpdate: (version) => ipcRenderer.invoke('cobre:update-install', version),
+  configureTls: () => ipcRenderer.invoke('cobre:tls-configure'),
+  disableTls: () => ipcRenderer.invoke('cobre:tls-disable'),
 });

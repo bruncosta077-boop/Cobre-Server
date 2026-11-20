@@ -10,6 +10,7 @@ const { createServer } = require('./server');
 const { createDashboard } = require('./dashboard');
 const { createBackup, openBackup } = require('./backup');
 const { checkForUpdate, prepareUpdate, verifyDownloadedUpdate, cleanupTemporaryInstallers } = require('./update');
+const { validateTlsPair, readConfiguredTlsPair, saveTlsPair, removeTlsPair } = require('./tls-config');
 
 const apiPort = Number(process.env.PORT || 8080);
 const dashboardPort = Number(process.env.DASHBOARD_PORT || 8788);
@@ -103,6 +104,47 @@ ipcMain.handle('cobre:update-install', async (event, version) => {
   const error = await shell.openPath(preparedUpdate.path);
   if (error) throw new Error(`Não foi possível abrir o instalador: ${error}`);
   setTimeout(() => app.quit(), 500);
+  return true;
+});
+
+ipcMain.handle('cobre:tls-configure', async (event) => {
+  assertDashboardSender(event);
+  const certificate = await dialog.showOpenDialog(mainWindow, {
+    title: 'Escolher certificado HTTPS em PEM', properties: ['openFile'],
+    filters: [{ name: 'Certificados PEM ou CRT', extensions: ['pem', 'crt', 'cer'] }],
+  });
+  if (certificate.canceled || !certificate.filePaths[0]) return false;
+  const privateKey = await dialog.showOpenDialog(mainWindow, {
+    title: 'Escolher chave privada HTTPS em PEM', properties: ['openFile'],
+    filters: [{ name: 'Chaves privadas PEM', extensions: ['pem', 'key'] }],
+  });
+  if (privateKey.canceled || !privateKey.filePaths[0]) return false;
+  const certStat = fs.statSync(certificate.filePaths[0]), keyStat = fs.statSync(privateKey.filePaths[0]);
+  if (certStat.size > 2 * 1024 * 1024 || keyStat.size > 2 * 1024 * 1024) throw new Error('Certificado e chave devem ter até 2 MB cada.');
+  const valid = validateTlsPair(fs.readFileSync(certificate.filePaths[0]), fs.readFileSync(privateKey.filePaths[0]));
+  const answer = await dialog.showMessageBox(mainWindow, {
+    type: 'warning', title: 'Ativar HTTPS para o Cobre Server',
+    message: 'Trocar a API de HTTP para HTTPS e reiniciar o Server?',
+    detail: `Certificado: ${valid.subject}\nVálido para: ${valid.hosts.join(', ') || 'o certificado não declara nomes/IP (SAN)'}\nVálido até: ${valid.validTo}\n\nDepois do reinício, atualize o endereço do Server nos aplicativos para HTTPS e use um endereço incluído no certificado. Certificados autoassinados ou não confiáveis ainda serão recusados pelos aparelhos. O Cobre Server guardará a chave no perfil deste Windows.`,
+    buttons: ['Cancelar', 'Ativar HTTPS e reiniciar'], defaultId: 0, cancelId: 0,
+  });
+  if (answer.response !== 1) return false;
+  saveTlsPair(dataDirectory, valid.cert, valid.key);
+  app.relaunch(); app.quit();
+  return true;
+});
+
+ipcMain.handle('cobre:tls-disable', async (event) => {
+  assertDashboardSender(event);
+  const answer = await dialog.showMessageBox(mainWindow, {
+    type: 'warning', title: 'Desativar HTTPS',
+    message: 'Voltar a API do Cobre Server para HTTP?',
+    detail: 'Os aplicativos precisarão voltar a usar o endereço HTTP. O tráfego na rede local deixará de ser criptografado.',
+    buttons: ['Manter HTTPS', 'Desativar e reiniciar'], defaultId: 0, cancelId: 0,
+  });
+  if (answer.response !== 1) return false;
+  removeTlsPair(dataDirectory);
+  app.relaunch(); app.quit();
   return true;
 });
 
@@ -227,7 +269,19 @@ ipcMain.handle('cobre:backup-restore', async (_event, passphrase) => {
 
 async function start() {
   process.env.DATA_DIR = dataDirectory;
-  apiServer = createServer({ dataDir: dataDirectory });
+  let tls;
+  try { tls = readConfiguredTlsPair(dataDirectory); }
+  catch (error) {
+    const answer = await dialog.showMessageBox({
+      type: 'error', title: 'Certificado HTTPS indisponível',
+      message: 'O Cobre Server não pode iniciar com o certificado configurado.',
+      detail: `${error.message}\n\nVocê pode corrigir o certificado na pasta de configuração ou desativar HTTPS e voltar para HTTP. A mudança para HTTP só ocorre após esta confirmação.`,
+      buttons: ['Sair', 'Desativar HTTPS e usar HTTP'], defaultId: 0, cancelId: 0,
+    });
+    if (answer.response === 1) { removeTlsPair(dataDirectory); app.relaunch(); app.quit(); return; }
+    throw error;
+  }
+  apiServer = createServer({ dataDir: dataDirectory, tls });
   dashboardServer = createDashboard(apiServer);
   dashboardServer.on('error', (error) => dialog.showErrorBox('Painel do Cobre Server', error.message));
   await listen(apiServer, apiPort, apiHost);

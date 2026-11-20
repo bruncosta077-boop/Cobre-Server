@@ -1,8 +1,9 @@
 'use strict';
 // Cobre ID — servidor de contas, dispositivos, sessões, presença e pareamento por código (v0.2).
 // Sem dependências externas: Node >= 22.13 (node:sqlite embutido).
-// TLS NÃO é feito aqui: coloque um proxy HTTPS (Caddy/nginx) na frente em produção.
+// HTTPS opcional: o processo principal importa o certificado configurado e não abre HTTP em paralelo.
 const http = require('http');
+const https = require('https');
 const net = require('net');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -362,7 +363,8 @@ function createServer(opts = {}) {
     },
   };
 
-  const server = http.createServer(async (req, res) => {
+  const transport = opts.tls || null;
+  const handler = async (req, res) => {
     try {
       if (!isLanAddress(req.socket.remoteAddress)) throw new HttpError(403, 'network_not_allowed', 'O Cobre Server aceita conexões locais por padrão.');
       const url = new URL(req.url, 'http://x');
@@ -389,12 +391,16 @@ function createServer(opts = {}) {
         send(res, e.status, { error: e.error, message: e.message, ...(e.extra || {}) }, e.extra?.retryAfter ? { 'Retry-After': String(e.extra.retryAfter) } : {});
       } else { console.error('erro interno:', e.message); send(res, 500, { error: 'internal', message: 'Erro interno.' }); }
     }
-  });
+  };
+  const server = transport
+    ? https.createServer({ cert: transport.cert, key: transport.key, minVersion: 'TLSv1.2' }, handler)
+    : http.createServer(handler);
   server.requestTimeout = 15_000;
   server.dashboardSnapshot = () => {
     const devices = db.prepare('SELECT id,name,type,created,last_seen,meta FROM devices ORDER BY last_seen DESC,created DESC').all();
     return {
       name: 'Cobre Server', version: appInfo.version, serverTime: now(), uptimeSeconds: Math.floor(process.uptime()), dataDir: cfg.dataDir,
+      secureTransport: Boolean(transport), certificateInfo: transport?.certificateInfo || null,
       apiPort: server.address()?.port || Number(process.env.PORT || 8080),
       lanAddresses: Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal).map((a) => a.address),
       onlineWindowMs: cfg.onlineWindow, accountCount: db.prepare('SELECT COUNT(*) AS count FROM users').get().count,
@@ -443,11 +449,14 @@ if (require.main === module) {
   const score = (ip) => (ip.startsWith('192.168.') ? 3 : ip.startsWith('10.') || /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2 : ip.startsWith('169.254.') ? -1 : 0);
   const lan = Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal)
     .map((a) => a.address).sort((a, b) => score(b) - score(a));
-  const api = createServer();
+  const { readConfiguredTlsPair } = require('./tls-config');
+  const transport = readConfiguredTlsPair(process.env.DATA_DIR || path.join(__dirname, 'data'));
+  const protocol = transport ? 'https' : 'http';
+  const api = createServer({ tls: transport });
   api.listen(port, host, () => {
     console.log('Cobre ID no ar.');
-    console.log('  Neste computador:  http://localhost:' + port);
-    for (const ip of lan.slice(0, 3)) console.log('  No celular (mesmo Wi-Fi):  http://' + ip + ':' + port);
+    console.log(`  Neste computador:  ${protocol}://localhost:${port}`);
+    for (const ip of lan.slice(0, 3)) console.log(`  No celular (mesmo Wi-Fi):  ${protocol}://${ip}:${port}`);
     const dashboard = createDashboard(api);
     dashboard.on('error', (e) => console.error('Painel local indisponível:', e.message));
     dashboard.listen(dashboardPort, '127.0.0.1', () => {

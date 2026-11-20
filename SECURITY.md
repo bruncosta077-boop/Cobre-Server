@@ -10,12 +10,13 @@
 - A janela Electron desativa Node.js no renderer, usa `contextIsolation` e `sandbox`, bloqueia janelas externas e navegação fora do painel.
 - Metadados de presença são limitados a versão, plataforma e números de diagnóstico permitidos. Caminhos de arquivos e credenciais são rejeitados.
 - Os endpoints de autenticação têm limites de tentativas e os códigos temporários de pareamento expiram.
+- O HTTPS opcional usa certificado e chave PEM importados pela interface, verifica a correspondência e validade e não mantém uma porta HTTP paralela. As chaves TLS ficam fora do repositório, no perfil local.
 
 ## Restrições importantes
 
-O Cobre Server atual atende a uma rede privada confiável. A API aceita HTTP para facilitar o uso entre aparelhos na LAN; credenciais e tokens podem ser observados por alguém com acesso à rede Wi-Fi. O filtro de IP reduz exposição pública acidental, mas não cifra a conexão nem substitui uma política de firewall. Não use Wi-Fi público e não trate um heartbeat como autorização para reproduzir mídia.
+O Cobre Server atual atende a uma rede privada confiável. A API aceita HTTP por padrão para facilitar o uso entre aparelhos na LAN; credenciais e tokens podem ser observados por alguém com acesso à rede Wi-Fi. HTTPS opcional cifra o transporte quando os clientes confiam na cadeia e no nome do certificado. Mesmo com HTTPS, a configuração atual não habilita acesso pela internet: origens públicas continuam recusadas. O filtro de IP reduz exposição acidental, mas não substitui uma política de firewall. Não use Wi-Fi público e não trate um heartbeat como autorização para reproduzir mídia.
 
-Antes de acesso remoto pela internet, a integração deve adotar HTTPS, autorização curta por host/aparelho, escopos separados e revogação testada. O segredo de assinatura jamais pode ser compartilhado com os clientes.
+Antes de acesso remoto pela internet, a integração ainda precisa de autorização curta por host/aparelho, escopos separados, revogação testada e validação de proxy confiável. O segredo de assinatura jamais pode ser compartilhado com os clientes.
 
 ## Dados locais
 

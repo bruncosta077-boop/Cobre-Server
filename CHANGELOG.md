@@ -1,5 +1,13 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.5 — HTTPS configurável
+
+- A tela Configurações importa certificado e chave privada PEM, confere validade e correspondência e guarda os arquivos no perfil local do Windows.
+- Com HTTPS ativado, a API passa a aceitar conexões somente por HTTPS na porta atual. O app mostra os endereços com o protocolo certo e reinicia após ativar/desativar.
+- Os clientes precisam usar um endereço coberto por certificado confiável pelo sistema. Certificados autoassinados não são aceitos automaticamente; a configuração não altera as URLs já salvas nos outros aplicativos.
+- A validação inclui teste de ponta a ponta do endpoint `/health` em HTTPS com certificado de teste gerado no Windows.
+- O Server ainda precisa de validação física com os clientes e segue sem retransmitir áudio.
+
 ## 0.5.0-beta.4 — atualizações dentro do aplicativo
 
 - A página Configurações agora verifica releases, apresenta as notas, baixa o instalador oficial para Windows x64 e abre a instalação após confirmação.

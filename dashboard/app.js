@@ -98,9 +98,20 @@ async function refresh() {
     $('nav-online').textContent = online;
     $('latency').textContent = elapsed;
     $('last-update').textContent = `Atualizado às ${formatter.format(new Date())}`;
-    $('api-address').textContent = snapshot.lanAddresses?.length
-      ? snapshot.lanAddresses.map((address) => `http://${address}:${snapshot.apiPort || 8080}`).join(' · ')
-      : `http://localhost:${snapshot.apiPort || 8080}`;
+    const apiProtocol = snapshot.secureTransport ? 'https' : 'http';
+    const hosts = snapshot.secureTransport
+      ? (snapshot.certificateInfo?.hosts || [])
+      : (snapshot.lanAddresses || []);
+    const apiAddresses = hosts.map((host) => `${apiProtocol}://${host.includes(':') ? `[${host}]` : host}:${snapshot.apiPort || 8080}`);
+    $('api-address').textContent = apiAddresses.length
+      ? apiAddresses.join(' · ')
+      : snapshot.secureTransport ? 'Use o nome/IP incluído no certificado' : `http://localhost:${snapshot.apiPort || 8080}`;
+    $('tls-status').textContent = snapshot.secureTransport ? 'HTTPS · criptografado' : 'HTTP · sem criptografia';
+    $('tls-enable').hidden = Boolean(snapshot.secureTransport);
+    $('tls-disable').hidden = !snapshot.secureTransport;
+    $('tls-details').textContent = snapshot.secureTransport
+      ? `Certificado HTTPS ativo${snapshot.certificateInfo?.hosts?.length ? ` · válido para ${snapshot.certificateInfo.hosts.join(', ')}` : ''}${snapshot.certificateInfo?.validTo ? ` · expira ${snapshot.certificateInfo.validTo}` : ''}. Os aparelhos precisam usar um desses endereços.`
+      : 'Use um certificado TLS válido e confiável para o endereço configurado nos aplicativos. Certificados autoassinados não são confiáveis automaticamente.';
     for (const id of ['side-version', 'footer-version']) $(id).textContent = `v${snapshot.version}`;
     const streamSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 && Number.isSafeInteger(device.streamLatencyMs));
     if (streamSamples.length) {
@@ -146,6 +157,18 @@ $('device-search').addEventListener('input', () => { if (snapshot) renderDevices
 $('refresh').addEventListener('click', refresh);
 $('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
 $('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
+$('tls-enable').addEventListener('click', async () => {
+  const button = $('tls-enable'); button.disabled = true;
+  try { const changed = await window.cobreApp?.configureTls(); if (changed) $('tls-details').textContent = 'HTTPS validado. O Cobre Server está reiniciando…'; }
+  catch (error) { $('tls-details').textContent = error.message || 'Não foi possível configurar HTTPS.'; }
+  finally { button.disabled = false; }
+});
+$('tls-disable').addEventListener('click', async () => {
+  const button = $('tls-disable'); button.disabled = true;
+  try { const changed = await window.cobreApp?.disableTls(); if (changed) $('tls-details').textContent = 'O Cobre Server está reiniciando em HTTP…'; }
+  catch (error) { $('tls-details').textContent = error.message || 'Não foi possível desativar HTTPS.'; }
+  finally { button.disabled = false; }
+});
 
 const updateBox = document.createElement('div');
 updateBox.className = 'server-update';

@@ -16,7 +16,9 @@ O servidor local embutido no Desktop ainda usa seu próprio contrato de bibliote
 
 O Cobre Server é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio dependem de medições reportadas pelos clientes. A partir da 0.5.0-beta.1, a interface exporta e restaura a base e a chave em um arquivo autenticado e criptografado por senha.
 
-Desde a beta 0.4.0-beta.2, a API ainda faz bind para receber conexões LAN, mas recusa pedidos com origem fora de loopback e faixas privadas IPv4/IPv6. Isso não cifra o tráfego: senhas e tokens ainda podem ser observados dentro da própria rede local.
+A partir da 0.5.0-beta.5, Configurações pode importar um certificado e uma chave privada PEM; ambos são conferidos antes de salvar. Quando configurado, o serviço atende somente por HTTPS na porta da API, sem manter HTTP paralelo. A confiança continua sendo responsabilidade do certificado e do sistema operacional do cliente; certificados autoassinados não são aceitos automaticamente. Desativar HTTPS volta explicitamente para HTTP.
+
+Desde a beta 0.4.0-beta.2, a API ainda faz bind para receber conexões LAN, mas recusa pedidos com origem fora de loopback e faixas privadas IPv4/IPv6. Em HTTP, isso não cifra o tráfego: senhas e tokens ainda podem ser observados dentro da própria rede local. A configuração HTTPS elimina esse risco somente quando o cliente valida uma cadeia confiável e o nome do certificado corresponde ao endereço.
 
 ## Diagnóstico de conexão planejado
 
