@@ -58,6 +58,43 @@ function createDashboard(api) {
         return res.end(JSON.stringify({ error: error.error || 'bad_request', message: status < 500 ? error.message : 'Não foi possível criar a conta.' }));
       }
     }
+    const revokeGrant = /^\/api\/access-grants\/([0-9a-f-]{36})\/revoke$/.exec(url.pathname);
+    if (req.method === 'POST' && revokeGrant) {
+      const expectedOrigin = `http://${req.headers.host}`;
+      if (!origin || origin !== expectedOrigin || !/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) {
+        res.writeHead(403, { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(JSON.stringify({ error: 'origin_not_allowed', message: 'A revogação só pode ser feita pelo painel local do Cobre Server.' }));
+      }
+      try {
+        let raw = '';
+        for await (const chunk of req) {
+          raw += chunk.toString('utf8');
+          if (Buffer.byteLength(raw) > 1024) {
+            res.writeHead(413, { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+            return res.end(JSON.stringify({ error: 'too_large', message: 'Requisição grande demais.' }));
+          }
+        }
+        let input = {};
+        try { input = raw ? JSON.parse(raw) : {}; } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+          return res.end(JSON.stringify({ error: 'bad_json', message: 'Envie um objeto JSON válido.' }));
+        }
+        if (!input || typeof input !== 'object' || Array.isArray(input)) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+          return res.end(JSON.stringify({ error: 'bad_json', message: 'Envie um objeto JSON válido.' }));
+        }
+        const revoked = api.revokeHostGrantForDashboard(revokeGrant[1]);
+        if (!revoked) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+          return res.end(JSON.stringify({ error: 'grant_not_found', message: 'A permissão não está mais ativa.' }));
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(JSON.stringify({ ok: true, grantId: revokeGrant[1] }));
+      } catch {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(JSON.stringify({ error: 'internal', message: 'Não foi possível revogar a permissão.' }));
+      }
+    }
     if (req.method !== 'GET' || !ASSETS.has(url.pathname)) {
       res.writeHead(404, { 'Cache-Control': 'no-store' }); return res.end('Não encontrado.');
     }

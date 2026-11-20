@@ -67,8 +67,50 @@ function renderDevices(devices) {
   filtered.forEach((device) => rows.append(deviceRow(device)));
 }
 
+function renderAccessGrants(grants) {
+  const rows = $('access-rows');
+  if (!rows) return;
+  rows.replaceChildren();
+  if (!grants.length) {
+    const tr = document.createElement('tr'); const td = document.createElement('td');
+    td.colSpan = 6; td.className = 'empty'; td.textContent = 'Nenhuma permissão ativa para um Desktop.';
+    tr.append(td); rows.append(tr); return;
+  }
+  const names = { 'library.read': 'Biblioteca', 'playback.read': 'Estado do player', 'playback.control': 'Controles', stream: 'Áudio' };
+  for (const grant of grants) {
+    const row = document.createElement('tr');
+    cell(row, grant.accountEmail);
+    cell(row, `${grant.clientName} · ${typeNames[grant.clientType] || grant.clientType}`);
+    cell(row, grant.hostName);
+    cell(row, (grant.scopes || []).map((scope) => names[scope] || scope).join(', '));
+    cell(row, new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(grant.expiresAt)));
+    const action = document.createElement('td');
+    const revoke = document.createElement('button'); revoke.type = 'button'; revoke.className = 'danger-button'; revoke.textContent = 'Revogar';
+    revoke.addEventListener('click', async () => {
+      if (!window.confirm(`Revogar o acesso de "${grant.clientName}" ao Desktop "${grant.hostName}"?`)) return;
+      revoke.disabled = true;
+      try {
+        const response = await fetch(`/api/access-grants/${encodeURIComponent(grant.grantId)}/revoke`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          cache: 'no-store', body: '{}',
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Não foi possível revogar a permissão.');
+        $('access-message').textContent = 'Permissão revogada.';
+        $('access-message').className = 'account-message success';
+        await refresh();
+      } catch (error) {
+        $('access-message').textContent = error.message || 'Não foi possível revogar a permissão.';
+        $('access-message').className = 'account-message error';
+        revoke.disabled = false;
+      }
+    });
+    action.append(revoke); row.append(action); rows.append(row);
+  }
+}
+
 function showPage(name) {
-  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
+  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', access: 'Acessos ao Desktop', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
   if (!labels[name]) return;
   document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === `page-${name}`));
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
@@ -96,6 +138,7 @@ async function refresh() {
     $('device-count').textContent = snapshot.deviceCount;
     $('identity-online').textContent = online;
     $('nav-online').textContent = online;
+    $('nav-grants').textContent = snapshot.accessGrants.length;
     $('latency').textContent = elapsed;
     $('last-update').textContent = `Atualizado às ${formatter.format(new Date())}`;
     const apiProtocol = snapshot.secureTransport ? 'https' : 'http';
@@ -137,6 +180,7 @@ async function refresh() {
     $('desktop-state').textContent = snapshot.devices.some((d) => d.type === 'desktop' && d.online) ? 'Online' : 'Aguardando';
     $('client-state').textContent = snapshot.devices.some((d) => ['mobile', 'tv'].includes(d.type) && d.online) ? 'Online' : 'Aguardando';
     renderDevices(snapshot.devices);
+    renderAccessGrants(snapshot.accessGrants);
   } catch {
     $('service-label').textContent = 'Serviço indisponível';
     $('side-service').textContent = 'Sem conexão';

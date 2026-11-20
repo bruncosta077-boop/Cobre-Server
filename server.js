@@ -122,7 +122,12 @@ function createServer(opts = {}) {
     hostGrantsOfUser: db.prepare(`SELECT g.id,g.client_device_id,g.host_device_id,g.scopes,g.created,g.expires,c.name AS client_name,h.name AS host_name
       FROM host_access_grants g JOIN devices c ON c.id=g.client_device_id JOIN devices h ON h.id=g.host_device_id
       WHERE g.user_id=? AND g.revoked=0 AND g.expires>? ORDER BY g.created DESC`),
+    dashboardHostGrants: db.prepare(`SELECT g.id,g.user_id,g.client_device_id,g.host_device_id,g.scopes,g.created,g.expires,
+      c.name AS client_name,c.type AS client_type,h.name AS host_name,u.email
+      FROM host_access_grants g JOIN devices c ON c.id=g.client_device_id JOIN devices h ON h.id=g.host_device_id
+      JOIN users u ON u.id=g.user_id WHERE g.revoked=0 AND g.expires>? ORDER BY g.created DESC`),
     revokeHostGrant: db.prepare('UPDATE host_access_grants SET revoked=1 WHERE id=? AND user_id=? AND host_device_id=? AND revoked=0'),
+    revokeHostGrantAdmin: db.prepare('UPDATE host_access_grants SET revoked=1 WHERE id=? AND revoked=0 AND expires>?'),
     purgeHostRequests: db.prepare('DELETE FROM host_access_requests WHERE expires < ?'),
     purgeHostGrants: db.prepare('DELETE FROM host_access_grants WHERE expires < ? OR revoked != 0'),
   };
@@ -577,6 +582,10 @@ function createServer(opts = {}) {
       lanAddresses: Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal).map((a) => a.address),
       onlineWindowMs: cfg.onlineWindow, accountCount: db.prepare('SELECT COUNT(*) AS count FROM users').get().count,
       deviceCount: devices.length,
+      accessGrants: q.dashboardHostGrants.all(now()).map((grant) => ({ grantId: grant.id,
+        accountEmail: grant.email, clientDeviceId: grant.client_device_id, clientName: grant.client_name,
+        clientType: grant.client_type, hostDeviceId: grant.host_device_id, hostName: grant.host_name,
+        scopes: JSON.parse(grant.scopes), createdAt: grant.created, expiresAt: grant.expires })),
       devices: devices.map((d) => {
         let meta = {}; try { meta = JSON.parse(d.meta); } catch {}
         return { id: d.id, name: d.name, type: d.type, createdAt: d.created, lastSeen: d.last_seen || null,
@@ -602,6 +611,7 @@ function createServer(opts = {}) {
       throw error;
     }
   };
+  server.revokeHostGrantForDashboard = (grantId) => q.revokeHostGrantAdmin.run(grantId, now()).changes === 1;
   server.createDatabaseSnapshot = (targetPath) => {
     const safePath = path.resolve(targetPath).replaceAll("'", "''");
     if (fs.existsSync(targetPath)) throw new Error('O destino do backup já existe.');

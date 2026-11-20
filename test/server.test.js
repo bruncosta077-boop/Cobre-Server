@@ -182,6 +182,10 @@ test('acesso ao Desktop é aprovado pelo host, limitado, listável e revogável'
   assert.equal((await call('POST', `${`/v1/hosts/${secondHost.body.device.id}/access-requests`}/${request.body.requestId}/approve`, {}, secondHost.body.accessToken)).status, 404);
   const approved = await call('POST', approvePath, {}, hostToken);
   assert.equal(approved.body.status, 'approved');
+  const dashboardGrant = srv.dashboardSnapshot().accessGrants.find((grant) => grant.grantId === approved.body.grantId);
+  assert.equal(dashboardGrant.accountEmail, 'host-grants@teste.com');
+  assert.equal(dashboardGrant.clientName, 'Celular de teste');
+  assert.equal(dashboardGrant.hostName, 'PC da sala');
   const redeemed = await call('GET', pollPath, null, mobile.body.accessToken);
   assert.equal(redeemed.status, 200);
   assert.deepEqual(redeemed.body.scopes, ['library.read', 'playback.control', 'stream']);
@@ -196,6 +200,12 @@ test('acesso ao Desktop é aprovado pelo host, limitado, listável e revogável'
   const grants = await call('GET', '/v1/hosts', null, mobile.body.accessToken);
   assert.equal(grants.body.accessGrants.length, 1);
   assert.equal(grants.body.accessGrants[0].grantId, validate.body.grantId);
+  const dashboardMobile = await call('POST', '/v1/login', { email: 'host-grants@teste.com', password: 'senha-forte-3', device: { name: 'Segundo celular', type: 'mobile' } });
+  const dashboardRequest = await call('POST', path, {}, dashboardMobile.body.accessToken);
+  await call('POST', `${path}/${dashboardRequest.body.requestId}/approve`, {}, hostToken);
+  const dashboardIssued = await call('GET', `${path}/${dashboardRequest.body.requestId}`, null, dashboardMobile.body.accessToken);
+  assert.equal(srv.revokeHostGrantForDashboard(dashboardIssued.body.grantId), true);
+  assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: dashboardIssued.body.grantToken }, hostToken)).body.error, 'host_grant_revoked');
   assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: redeemed.body.grantToken }, secondHost.body.accessToken)).status, 401);
   assert.equal((await call('POST', '/v1/hosts/access-grants/validate', { grantToken: `${redeemed.body.grantToken}x` }, hostToken)).status, 401);
 
@@ -345,7 +355,8 @@ test('corpo grande, JSON inválido e rota inexistente', async () => {
 });
 
 test('painel local serve logo e bloqueia origens e hosts externos', async () => {
-  const panel = createDashboard({ dashboardSnapshot: () => ({ ok: true }), createAccount: async (input) => ({ email: input.email }) });
+  let revokedGrantId = null;
+  const panel = createDashboard({ dashboardSnapshot: () => ({ ok: true, accessGrants: [] }), createAccount: async (input) => ({ email: input.email }), revokeHostGrantForDashboard: (id) => { revokedGrantId = id; return id === '123e4567-e89b-42d3-a456-426614174000'; } });
   await new Promise((ok) => panel.listen(0, '127.0.0.1', ok));
   const panelBase = `http://127.0.0.1:${panel.address().port}`;
   try {
@@ -357,10 +368,20 @@ test('painel local serve logo e bloqueia origens e hosts externos', async () => 
     const settings = await (await fetch(`${panelBase}/`)).text();
     assert.match(settings, /backup-export/);
     assert.match(settings, /backup-restore/);
+    assert.match(settings, /page-access/);
     const dashboardScript = await (await fetch(`${panelBase}/app.js`)).text();
     assert.match(dashboardScript, /exportBackup/);
     assert.match(dashboardScript, /restoreBackup/);
+    assert.match(dashboardScript, /renderAccessGrants/);
     assert.equal((await fetch(`${panelBase}/api/status`)).status, 200);
+    const grantId = '123e4567-e89b-42d3-a456-426614174000';
+    const revoked = await fetch(`${panelBase}/api/access-grants/${grantId}/revoke`, { method: 'POST', headers: { Origin: panelBase, 'Content-Type': 'application/json' }, body: '{}' });
+    assert.equal(revoked.status, 200);
+    assert.equal(revokedGrantId, grantId);
+    const forgedRevoke = await fetch(`${panelBase}/api/access-grants/${grantId}/revoke`, { method: 'POST', headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, body: '{}' });
+    assert.equal(forgedRevoke.status, 403);
+    const invalidRevoke = await fetch(`${panelBase}/api/access-grants/${grantId}/revoke`, { method: 'POST', headers: { Origin: panelBase, 'Content-Type': 'application/json' }, body: '{bad' });
+    assert.equal(invalidRevoke.status, 400);
     const blockedHost = await new Promise((resolve, reject) => {
       const req = http.get({ hostname: '127.0.0.1', port: panel.address().port, path: '/', headers: { Host: 'evil.example' } }, (res) => {
         res.resume(); res.on('end', () => resolve(res.statusCode));

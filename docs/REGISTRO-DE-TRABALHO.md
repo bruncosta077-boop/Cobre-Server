@@ -1,5 +1,12 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-20 — Cobre Server 0.5.0-beta.8 em preparação
+
+- A central local ganhou a página **Acessos ao Desktop**, que lista conta, aparelho autorizado, host, escopos e validade das concessões ativas.
+- A página permite revogar concessões. A rota administrativa aceita somente JSON da mesma origem; o painel continua limitado a loopback.
+- A interface explica que a autorização ainda não está integrada ao servidor de biblioteca/áudio no Desktop e ao fluxo do Mobile.
+- Testes adicionados para os dados das concessões no painel e proteção de origem da revogação. Validação/publicação beta8 pendentes.
+
 ## 2026-11-20 — Cobre Server 0.5.0-beta.7 publicado
 
 - Implementada a base de autorização por Desktop: o Mobile/TV solicita acesso a um host; o próprio Desktop autenticado consulta a fila e aprova ou recusa o pedido. O cliente recebe uma concessão assinada e limitada no tempo e por permissões.

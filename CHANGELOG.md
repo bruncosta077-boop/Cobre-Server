@@ -1,5 +1,12 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.8 — painel de acessos ao Desktop
+
+- A central do Cobre Server lista as concessões ativas por conta, aparelho, Desktop, permissões e prazo de validade.
+- Permissões podem ser revogadas no painel local; a rota exige mesma origem, JSON e acesso ao painel restrito a loopback.
+- O painel explica que Desktop e Mobile ainda precisam integrar a validação das concessões às rotas de biblioteca e áudio.
+- Testes cobrem dados apresentados no painel e rejeição de tentativa de revogação com origem externa.
+
 ## 0.5.0-beta.7 — base de autorização por Desktop
 
 - Mobile/TV podem abrir uma solicitação de acesso a um Desktop específico; o Desktop autenticado lista os pedidos e aprova ou recusa cada um.
