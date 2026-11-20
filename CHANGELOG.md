@@ -2,6 +2,12 @@
 
 Todas as alterações relevantes são registradas aqui. O histórico geral do ecossistema fica em [`docs/REGISTRO-DE-TRABALHO.md`](docs/REGISTRO-DE-TRABALHO.md).
 
+## 0.5.0-beta.2 — recuperação mais segura
+
+- Se a substituição de dados falhar após o encerramento do serviço, remove arquivos temporários abertos e reinicia a aplicação usando a cópia criptografada prévia como recuperação.
+- O build beta2 inclui todas as funções de backup/restauração da beta1.
+- Continua beta: API da LAN usa HTTP sem criptografia, clientes ainda não completam pareamento e integração autorizada ao Desktop e falta teste visual de restauração com dados reais.
+
 ## 0.5.0-beta.1 — cópia de segurança criptografada
 
 - Configurações agora permitem exportar e restaurar contas, dispositivos, sessões e chave desta instância em arquivo protegido por senha.

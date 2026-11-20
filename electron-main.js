@@ -173,9 +173,12 @@ ipcMain.handle('cobre:backup-restore', async (_event, passphrase) => {
       if (fs.existsSync(priorDb)) { fs.rmSync(dbPath, { force: true }); fs.renameSync(priorDb, dbPath); }
       if (fs.existsSync(priorKey)) { fs.rmSync(keyPath, { force: true }); fs.renameSync(priorKey, keyPath); }
     } catch (rollbackError) {
+      fs.rmSync(staging, { recursive: true, force: true });
+      app.relaunch(); app.exit(1);
       throw new Error(`A restauração falhou e a recuperação automática também falhou. A cópia atual permanece em ${currentBackupPath}. ${rollbackError.message}`);
     }
     if (closed) {
+      fs.rmSync(staging, { recursive: true, force: true });
       app.relaunch(); app.exit(1);
       return false;
     }
