@@ -1,5 +1,13 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-20 — estado de atualização e retenção de dados
+
+- Incluído `docs/ESTADO-ECOSSISTEMA.md`, com versões publicadas de Desktop, Mobile, Server e TV, diferença entre release e código atual, comportamento de atualização/dados e critérios que ainda bloqueiam a estabilidade 1.0.
+- Evidência atual: Desktop 3.8.0 estável; Mobile 0.9.0 pré-release (código 0.10.0 ainda sem chave de distribuição); Server 0.5.0-beta.3; TV 0.2.0 ainda sem release e sem reprodução real.
+- Revalidação local: `npm test` do Server passou 24/24; `npm audit --audit-level=moderate` reportou zero vulnerabilidades conhecidas. Isso não substitui teste de restauração pela interface nem validação TLS/dispositivos reais.
+- A compilação Android da TV passou no workflow `44743655894` após adicionar os componentes de diálogo que faltavam. Pareamento foi implementado no código, mas aguarda teste físico com Server/Mobile reais.
+- O Server permanece beta: HTTP na LAN, sem retransmissão de áudio. Não publicar 1.0 até cumprir os critérios de `ESTADO-ECOSSISTEMA.md`.
+
 Arquivo vivo para registrar o que existe, o que mudou, verificações e trabalho pendente por aplicativo. Atualize junto a cada entrega; não marque itens apenas planejados como concluídos.
 
 ## 2026-11-20 — backup de instância e auditoria do estado publicado
