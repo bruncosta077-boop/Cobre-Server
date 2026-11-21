@@ -235,6 +235,11 @@ function createServer(opts = {}) {
       const value = source[key];
       if (Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000_000) out[key] = value;
     }
+    if (Number.isSafeInteger(out.streamLatencyMs) && Number.isSafeInteger(out.streamBytesPerSecond) && out.streamBytesPerSecond > 0) {
+      const hasAge = Object.prototype.hasOwnProperty.call(source, 'streamAgeMs');
+      const validAge = !hasAge || (Number.isSafeInteger(source.streamAgeMs) && source.streamAgeMs >= 0 && source.streamAgeMs <= 120_000);
+      if (validAge) out.streamMeasuredAt = now() - (hasAge ? source.streamAgeMs : 0);
+    }
     if (typeof source.desktopHostActive === 'boolean') out.desktopHostActive = source.desktopHostActive;
     return out;
   };
@@ -620,6 +625,7 @@ function createServer(opts = {}) {
           catalogResponseMs: Number.isSafeInteger(meta.catalogResponseMs) ? meta.catalogResponseMs : null,
           streamLatencyMs: Number.isSafeInteger(meta.streamLatencyMs) ? meta.streamLatencyMs : null,
           streamBytesPerSecond: Number.isSafeInteger(meta.streamBytesPerSecond) ? meta.streamBytesPerSecond : null,
+          streamMeasuredAt: Number.isSafeInteger(meta.streamMeasuredAt) ? meta.streamMeasuredAt : null,
           desktopHostActive: meta.desktopHostActive === true };
       }),
     };

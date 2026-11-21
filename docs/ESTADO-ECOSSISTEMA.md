@@ -4,10 +4,10 @@ Atualizado em 2026-11-21. Versões publicadas e estado de integração são regi
 
 | Aplicativo | Último lançamento publicado | Estado do código | Atualização e preservação de dados |
 | --- | --- | --- | --- |
-| [Cobre Desktop](https://github.com/bruncosta077-boop/Cobre/releases/tag/cobre-desktop-v3.12.2) | 3.12.2 estável | Versão mostrada na interface vem do executável; streaming local protegido por concessões | Atualizador interno conserva os dados e valida SHA-256; backup/rollback do pacote. |
-| [Cobre Mobile](https://github.com/bruncosta077-boop/Cobre-Mobile/releases/tag/mobile-v0.14.0) | 0.14.0 pré-release (APK assinado) | Biblioteca local/Computador/Tudo mais clara; integração existente com Cobre ID, autorização, catálogo LAN e reprodução direta preservada | APK assinado com a chave estável; instalação e atualização por cima precisam continuar sendo validadas no aparelho. |
-| [Cobre Server](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.1.0) | 1.1.0 (atualização do painel) | Mostra endereço copiável e separa presença Cobre ID, Desktop, Mobile e medições de áudio; mantém API ativa na bandeja e pode iniciar com o Windows | Instalador/ZIP mantêm dados em `%APPDATA%`; exportação criptografada permite recuperação. |
-| [Cobre TV](https://github.com/bruncosta077-boop/Cobre-TV) | Sem release publicada | Código 0.3.0 compila e já lista Desktops, pede autorização, consulta biblioteca/capas e toca stream direto do Desktop; ainda sem teste físico | Só há APK debug de desenvolvimento. Não há assinatura estável nem pacote de distribuição. |
+| [Cobre Desktop](https://github.com/bruncosta077-boop/Cobre/releases/tag/cobre-desktop-v3.13.0) | 3.13.0 estável | Descoberta local por mDNS; consentimento Cobre ID e stream protegido permanecem separados | Instalador, ZIP portátil e pacote interno publicados com checksums. |
+| [Cobre Mobile](https://github.com/bruncosta077-boop/Cobre-Mobile/releases/tag/mobile-v0.15.0) | 0.15.0 pré-release (APK assinado) | Descobre Desktop localmente, mantém QR/manual, bibliotecas local/remota e reprodução direta; código 0.16.0 está atualizando idade das medições | APK assinado com a chave estável; instalação/atualização e descoberta ainda pedem validação em rede física. |
+| [Cobre Server](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.1.0) | 1.1.0 estável | Conta, sessões, autorização e presença; 1.2.0 em desenvolvimento para mostrar métricas recentes Mobile/TV sem confundir presença com stream | Instalador/ZIP mantêm dados em `%APPDATA%`; exportação criptografada permite recuperação. |
+| [Cobre TV](https://github.com/bruncosta077-boop/Cobre-TV) | Sem release publicada | Código 0.4.0 compila, descobre Desktop, consulta biblioteca e toca stream direto; versão 0.5.0 adiciona presença e telemetria | Só há APK debug de desenvolvimento. Não há assinatura estável nem pacote de distribuição. |
 
 ## Regras para atualizar sem perder configuração
 
@@ -17,10 +17,10 @@ Atualizado em 2026-11-21. Versões publicadas e estado de integração são regi
 
 ## Verificações práticas pendentes
 
-1. Validar o fluxo completo da TV 0.3.0 em Android TV/Google TV físico: pareamento, aprovação, catálogo, capas e áudio com seek.
-2. Confirmar reprodução da biblioteca Desktop no Mobile 0.14.0 em diferentes redes locais e depois de interrupção/reconexão.
+1. Validar o fluxo completo da TV 0.5.0 em Android TV/Google TV físico: descoberta, pareamento, heartbeat, catálogo, capas, áudio, seek e métricas.
+2. Confirmar descoberta e reprodução do Desktop no Mobile 0.15.0 em diferentes redes locais e após interrupção/reconexão.
 3. Validar a restauração criptografada do Server pela interface Windows com uma instância descartável.
 4. Configurar e validar certificado TLS confiável se o uso sair de uma rede privada confiável.
 5. Confirmar atualização assinada do Mobile por cima da versão instalada e preservação dos dados.
 
-Essas verificações acompanham compatibilidade e uso real; não alteram o papel do Cobre Server 1.1.0 como serviço local de identidade, presença e autorização.
+Essas verificações acompanham compatibilidade e uso real; não alteram o papel do Cobre Server como serviço de identidade, presença e autorização, nem tornam o Server um relay de mídia.

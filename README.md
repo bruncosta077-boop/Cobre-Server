@@ -37,10 +37,10 @@ O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a 
 - Dispositivos vinculados, tipo, plataforma, versão e último heartbeat.
 - Filtros de aparelhos online/offline e busca.
 - Tempo de resposta da API local e endereços/portas usados.
-- Diagnóstico com taxa de áudio recebida e latência inicial informadas pelo Mobile durante stream do Desktop; presença e latência do catálogo permanecem métricas separadas.
+- Diagnóstico com taxa de áudio recebida e latência inicial informadas pelo Mobile ou TV durante stream do Desktop; só mostra amostras recentes de aparelhos online, enquanto presença e latência do catálogo permanecem métricas separadas.
 - Atalho para abrir a pasta de dados e opção segura para encerrar o servidor.
 
-O painel separa a presença Cobre ID da disponibilidade da biblioteca e da reprodução. Ele mostra medidas reportadas pelo Mobile durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local.
+O painel separa presença Cobre ID da disponibilidade da biblioteca e da reprodução. Ele mostra medidas recentes reportadas pelos clientes durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local.
 
 ## Como os aplicativos se conectam
 

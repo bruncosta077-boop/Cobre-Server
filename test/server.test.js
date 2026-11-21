@@ -136,12 +136,20 @@ test('refresh rotaciona e reuso derruba a sessão do dispositivo', async () => {
 test('presença: online logo após heartbeat, offline depois da janela', async () => {
   const pc = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: PC });
   const lg = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: { name: 'Leitor', type: 'mobile' } });
-  await call('POST', '/v1/presence', { meta: { platform: 'Android', appVersion: '0.7.0', catalogResponseMs: 132, streamBytesPerSecond: 2_000_000, password: 'must-not-be-stored', localPath: 'C:\\Music' } }, pc.body.accessToken);
+  const measurementSentAt = Date.now();
+  await call('POST', '/v1/presence', { meta: { platform: 'Android', appVersion: '0.7.0', catalogResponseMs: 132, streamLatencyMs: 54, streamBytesPerSecond: 2_000_000, streamAgeMs: 750, password: 'must-not-be-stored', localPath: 'C:\\Music' } }, pc.body.accessToken);
   let l = await call('GET', '/v1/devices', null, lg.body.accessToken);
   const me = l.body.devices.find((d) => d.id === pc.body.device.id);
   assert.equal(me.online, true); assert.equal(me.meta.appVersion, '0.7.0');
   assert.equal(me.meta.catalogResponseMs, 132); assert.equal(me.meta.streamBytesPerSecond, 2_000_000);
+  assert.equal(me.meta.streamLatencyMs, 54);
+  assert.ok(me.meta.streamMeasuredAt >= measurementSentAt - 1_000 && me.meta.streamMeasuredAt <= Date.now());
+  assert.equal(me.meta.streamAgeMs, undefined);
   assert.equal(me.meta.password, undefined); assert.equal(me.meta.localPath, undefined);
+  await call('POST', '/v1/presence', { meta: { streamLatencyMs: 40, streamBytesPerSecond: 1_000_000, streamAgeMs: 120_001 } }, lg.body.accessToken);
+  l = await call('GET', '/v1/devices', null, pc.body.accessToken);
+  const staleSample = l.body.devices.find((d) => d.id === lg.body.device.id);
+  assert.equal(staleSample.meta.streamMeasuredAt, undefined);
   await new Promise((ok) => setTimeout(ok, 1700));
   l = await call('GET', '/v1/devices', null, lg.body.accessToken);
   assert.equal(l.body.devices.find((d) => d.id === pc.body.device.id).online, false);

@@ -198,14 +198,18 @@ async function refresh() {
       ? `Certificado HTTPS ativo${snapshot.certificateInfo?.hosts?.length ? ` · válido para ${snapshot.certificateInfo.hosts.join(', ')}` : ''}${snapshot.certificateInfo?.validTo ? ` · expira ${snapshot.certificateInfo.validTo}` : ''}. Os aparelhos precisam usar um desses endereços.`
       : 'Use um certificado TLS válido e confiável para o endereço configurado nos aplicativos. Certificados autoassinados não são confiáveis automaticamente.';
     for (const id of ['side-version', 'footer-version']) $(id).textContent = `v${snapshot.version}`;
-    const streamSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 && Number.isSafeInteger(device.streamLatencyMs));
+    const recentStream = (device) => ['mobile', 'tv'].includes(device.type) && device.online &&
+      Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 &&
+      Number.isSafeInteger(device.streamLatencyMs) && Number.isSafeInteger(device.streamMeasuredAt) &&
+      snapshot.serverTime - device.streamMeasuredAt >= 0 && snapshot.serverTime - device.streamMeasuredAt <= 120_000;
+    const streamSamples = snapshot.devices.filter(recentStream);
     if (streamSamples.length) {
       const averageRate = Math.round(streamSamples.reduce((sum, device) => sum + device.streamBytesPerSecond, 0) / streamSamples.length);
       const averageLatency = Math.round(streamSamples.reduce((sum, device) => sum + device.streamLatencyMs, 0) / streamSamples.length);
       const rateLabel = averageRate >= 1_000_000 ? `${(averageRate / 1_000_000).toFixed(2)} MB/s` : `${Math.round(averageRate / 1_000)} KB/s`;
       $('stream-title').textContent = `Recepção de áudio: ${rateLabel}`;
-      $('stream-note').textContent = `Leitura informada por ${streamSamples.length} aparelho(s) Mobile; latência média para o primeiro dado: ${averageLatency} ms. Mede o trecho Desktop → Mobile na rede local, não a conexão com o Cobre Server.`;
-      $('stream-pill').textContent = 'Medição do Mobile';
+      $('stream-note').textContent = `Leitura recente informada por ${streamSamples.length} aparelho(s) Mobile/TV; latência média para o primeiro dado: ${averageLatency} ms. Mede Desktop → aparelho pela rede local, não a conexão com o Cobre Server.`;
+      $('stream-pill').textContent = 'Medição Mobile/TV';
     } else {
       const catalogSamples = snapshot.devices.filter((device) => Number.isSafeInteger(device.catalogResponseMs));
       if (catalogSamples.length) {
@@ -215,7 +219,7 @@ async function refresh() {
         $('stream-pill').textContent = 'Resposta do catálogo';
       } else {
         $('stream-title').textContent = 'Streaming aguardando reprodução';
-        $('stream-note').textContent = 'Ao tocar uma faixa do computador no Mobile, a próxima presença Cobre ID enviará a taxa e a latência medidas no próprio recebimento do áudio.';
+        $('stream-note').textContent = 'Ao tocar uma faixa do computador no Mobile ou na TV, o aparelho envia a taxa e a latência medidas no próprio recebimento do áudio.';
         $('stream-pill').textContent = 'Sem reprodução medida';
       }
     }
@@ -239,11 +243,11 @@ async function refresh() {
     $('pairing-summary').textContent = desktopOnline && mobileOnline ? 'Desktop e celular conectados ao Cobre ID'
       : desktopOnline ? 'Desktop conectado · aguardando celular'
       : mobileOnline ? 'Celular conectado · aguardando Desktop' : 'Aguardando aparelhos';
-    const measuredStream = snapshot.devices.find((device) => device.type === 'mobile' && Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 && Number.isSafeInteger(device.streamLatencyMs));
+    const measuredStream = streamSamples[0];
     $('stream-connection-status').textContent = measuredStream ? 'Última medição de áudio' : 'Aguardando reprodução';
     $('stream-connection-note').textContent = measuredStream
-      ? 'Medição do trecho Desktop → Mobile. O Server só coordena conta e autorização.'
-      : 'O Desktop envia a música diretamente ao Mobile; o Server não recebe nem retransmite áudio.';
+      ? `Medição recente do trecho Desktop → ${measuredStream.type === 'tv' ? 'TV' : 'Mobile'}. O Server só coordena conta e autorização.`
+      : 'O Desktop envia a música diretamente ao Mobile/TV; o Server não recebe nem retransmite áudio.';
     $('stream-connection-rate').textContent = measuredStream
       ? (measuredStream.streamBytesPerSecond >= 1_000_000 ? (measuredStream.streamBytesPerSecond / 1_000_000).toFixed(2) + ' MB/s' : Math.round(measuredStream.streamBytesPerSecond / 1_000) + ' KB/s')
       : '—';

@@ -1,61 +1,32 @@
 # Roadmap do Cobre Server
 
-## Versão em publicação — 0.5.0-beta.12
+## Estado atual
 
-- [x] Identidade visual própria para o aplicativo Cobre Server, com símbolo de módulos centrais distinto do player Desktop.
-- [x] Pedidos de autorização Mobile visíveis no painel local, com instruções para aprovar pelo Desktop e prazo sincronizado com o Mobile.
+- **Server 1.1.0 estável; 1.2.0 em validação:** identidade Cobre ID, sessões, presença, pareamento, pedidos e revogação por Desktop; 1.2.0 filtra telemetria recente Mobile/TV no diagnóstico.
+- **Desktop 3.13.0:** anuncia presença local por mDNS quando o acesso remoto e o Cobre ID estão ativos. O anúncio não contém credenciais; os clientes ainda precisam de concessão e aprovação.
+- **Mobile 0.15.0 pré-release assinada; 0.16.0 em validação:** login, QR e descoberta local; a nova versão envia a idade da amostra de stream para o Server.
+- **TV 0.5.0 em validação:** biblioteca, reprodução direta do Desktop, descoberta local, autorização Cobre ID, presença periódica e medição agregada do stream. APK ainda é somente debug.
+- A nova versão do painel prevista para 1.2.0 estende o diagnóstico de áudio do Mobile para TV e mostra somente amostras recentes de aparelhos online.
 
-## Funcionalidades publicadas — até 0.5.0-beta.9
+## Prioridades
 
-- [x] Contas, login, sessões com renovação e dispositivos vinculados.
-- [x] Presença por heartbeat e endpoints transacionais de solicitação/aprovação/resgate de código para TV.
-- [x] Mobile implementa aprovação; TV 0.2.0 solicita, espera, resgata o código e protege seu token com Android Keystore.
-- [ ] Validar o pareamento entre Server, Mobile e TV físicos; os clientes ainda são builds de desenvolvimento e não foram testados em aparelhos reais.
-- [x] Aplicativo desktop Electron para Windows, com interface de gerenciamento local.
-- [x] Painel de estado, contas, dispositivos, filtros, portas e pasta de dados.
-- [x] Workflow do GitHub Actions para gerar ZIP portátil e instalador Windows.
-- [x] Exportar/restaurar uma cópia criptografada da base e chave, com validação e cópia de recuperação.
-- [x] API de concessão limitada a cada Desktop host: pedido, aprovação/recusa no host, escopos, expiração, validação e revogação. Desktop e Mobile ainda não consomem as rotas.
-- [x] Consentimento por 30 dias com tokens de acesso curtos renováveis enquanto a permissão estiver válida.
-- [x] Central local lista e revoga permissões emitidas por host.
-- [ ] Acesso autorizado do Mobile/TV à biblioteca e ao áudio do Desktop.
-- [x] Receber e exibir taxa e latência inicial do stream reportadas pelo Mobile, separadas de presença e latência do catálogo.
-- [ ] Métricas de erros do Desktop, suporte equivalente na TV e validação integrada em uso real.
-- [x] HTTPS/TLS opcional com certificado confiável PEM, ativação na interface e API HTTPS-only após reinício.
-- [ ] Validar certificado/URL e login Cobre ID em Desktop, Mobile e TV físicos.
-- [x] Atualizador integrado para releases oficiais Windows x64, com notas, SHA-256 e confirmação antes de instalar.
-- [ ] Assinatura digital do aplicativo Windows.
-- [ ] Validar backup/restauração pela interface Windows com instalação e dados reais.
+1. **Validar em aparelhos reais:** conferir descoberta mDNS, aprovação/revogação, heartbeat, catálogo, capas e reprodução/seek em celular e Google TV. Registrar dispositivo, versão, rede e resultado sem expor dados pessoais.
+2. **Confirmar telemetria sem falsos estados:** verificar que Mobile/TV aparecem online somente com heartbeat recente e que velocidade/latência expiram sem reprodução recente.
+3. **Validar recuperação e dados:** testar exportação/restauração criptografada do Server em instância descartável e confirmar update do Desktop, Mobile e Server por cima preservando preferências.
+4. **Reduzir dependência de HTTP local:** documentar TLS com certificado confiável para os endereços usados pelos aparelhos; testar login e renovação com validação padrão dos certificados.
+5. **Aprimorar o ecossistema por contrato:** manter versões de protocolo compatíveis e definir uma especificação compartilhada antes de acrescentar rotas ou formatos novos.
 
-## Próximos marcos de integração
+## Itens futuros registrados
 
-1. Integrar as rotas de solicitação/aprovação/revogação de host ao Desktop e ao Mobile; os aplicativos ainda não consomem a API.
-2. Aplicar e validar a permissão curta no catálogo, nos controles de playback e no endpoint de áudio do Desktop.
-3. Validar pareamento e revogação entre aparelhos reais; corrigir diferenças de rede e versões encontradas.
-4. Concluir biblioteca e playback reais na TV, mantendo o áudio direto entre Desktop e aparelho.
-5. Validar em aparelhos reais certificado confiável, URLs e login Cobre ID via HTTPS antes de uso fora de uma LAN confiável.
+- Perfil Cobre ID: mostrar qual conta está conectada e permitir editar somente os campos que a API vier a suportar.
+- Acesso fora de casa: documentar VPN (por exemplo Tailscale/WireGuard) antes de considerar relay próprio. O Server não deve receber nem retransmitir música.
+- Assinatura digital do executável Windows.
 
-## Itens anotados para evolução
+## Princípios e critérios de pronto
 
-- Perfil Cobre ID: mostrar com clareza qual conta está conectada, exibir seus dados básicos e permitir editar os campos de perfil suportados. Ainda não implementado; será trabalhado depois da integração e estabilização do acesso autorizado ao Desktop.
-
-## Aplicativo Cobre Server
-
-- [x] Janela própria do aplicativo; não abre o painel num navegador externo.
-- [x] Encerramento controlado do serviço e acesso à pasta de dados.
-- [x] Pacote ZIP portátil e instalador gerados para Windows.
-- [x] Exportação/restauração criptografada da base e chave local, com confirmação e cópia de recuperação.
-- [ ] Validar backup/restauração pela interface Windows com instalação descartável e dados de teste.
-- [x] Atualizador dentro do aplicativo, com SHA-256 e notas da versão.
-- [ ] Assinatura digital do executável Windows.
-- [ ] Validar HTTPS e login com certificados confiáveis nos aparelhos Desktop, Mobile e TV.
-- [ ] Configuração assistida de rede, logs sanitizados e suporte a relay de mídia, caso necessário para o uso fora da LAN.
-
-## Critérios de pronto
-
-- Nenhum áudio passa pelo servidor central.
-- Um aparelho revogado perde acesso ao Desktop autorizado.
-- Presença online não é confundida com conectividade ou reprodução de stream.
-- Uma cópia criptografada válida recupera contas/sessões; senha errada ou arquivo adulterado não altera os dados atuais.
-- As medições têm origem, unidade e janela explícitas.
-- Perda da internet não interrompe indevidamente o streaming local já autorizado.
+- O Cobre Desktop continua sendo a origem dos arquivos. O Cobre Server coordena conta, consentimento e presença.
+- Nenhum áudio passa pelo Server; presença Cobre ID não significa que o Desktop está acessível ou que a música toca.
+- A descoberta local não autoriza acesso. Consentimentos continuam vinculados a aparelho/host, com escopos, expiração e revogação.
+- Diagnósticos identificam a origem, a idade e a unidade; dados antigos não aparecem como velocidade atual.
+- Quando Server ou internet ficam indisponíveis, não declarar falha do stream local sem testar a rota Desktop → aparelho.
+- Compilação automatizada comprova build, não substitui validação com aparelhos e rede reais.
