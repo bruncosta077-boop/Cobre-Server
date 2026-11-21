@@ -134,7 +134,7 @@ function renderAccessRequests(requests) {
 }
 
 function showPage(name) {
-  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', access: 'Acesso ao Mobile', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
+  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', access: 'Conectar celular', connections: 'Estado da conexão', settings: 'Configurações', releases: 'Notas da versão' };
   if (!labels[name]) return;
   document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === `page-${name}`));
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
@@ -172,9 +172,25 @@ async function refresh() {
       ? (snapshot.certificateInfo?.hosts || [])
       : (snapshot.lanAddresses || []);
     const apiAddresses = hosts.map((host) => `${apiProtocol}://${host.includes(':') ? `[${host}]` : host}:${snapshot.apiPort || 8080}`);
-    $('api-address').textContent = apiAddresses.length
+    const addressDescription = apiAddresses.length
       ? apiAddresses.join(' · ')
-      : snapshot.secureTransport ? 'Use o nome/IP incluído no certificado' : `http://localhost:${snapshot.apiPort || 8080}`;
+      : snapshot.secureTransport ? 'Use o nome/IP incluído no certificado' : 'Nenhum endereço de rede encontrado';
+    $('api-address-settings').textContent = addressDescription;
+    const addressSelect = $('server-address-choice');
+    const oldAddress = addressSelect.value;
+    addressSelect.replaceChildren();
+    const usableAddresses = apiAddresses.filter((address) => !address.includes('169.254.'));
+    for (const address of usableAddresses) {
+      const option = document.createElement('option'); option.value = address; option.textContent = address; addressSelect.append(option);
+    }
+    if (!usableAddresses.length) {
+      const option = document.createElement('option'); option.value = ''; option.textContent = 'Nenhum endereço de rede encontrado'; addressSelect.append(option);
+    }
+    addressSelect.disabled = !usableAddresses.length;
+    if (usableAddresses.includes(oldAddress)) addressSelect.value = oldAddress;
+    $('server-address-note').textContent = snapshot.secureTransport
+      ? 'O endereço precisa corresponder ao certificado HTTPS e ser confiável no celular.'
+      : 'Use o mesmo Wi-Fi no computador e no celular. Não use este endereço fora da rede local.';
     $('tls-status').textContent = snapshot.secureTransport ? 'HTTPS · criptografado' : 'HTTP · sem criptografia';
     $('tls-enable').hidden = Boolean(snapshot.secureTransport);
     $('tls-disable').hidden = !snapshot.secureTransport;
@@ -203,8 +219,35 @@ async function refresh() {
         $('stream-pill').textContent = 'Sem reprodução medida';
       }
     }
-    $('desktop-state').textContent = snapshot.devices.some((d) => d.type === 'desktop' && d.online) ? 'Online' : 'Aguardando';
-    $('client-state').textContent = snapshot.devices.some((d) => ['mobile', 'tv'].includes(d.type) && d.online) ? 'Online' : 'Aguardando';
+    const desktop = snapshot.devices.find((device) => device.type === 'desktop' && device.online) || snapshot.devices.find((device) => device.type === 'desktop');
+    const mobile = snapshot.devices.find((device) => device.type === 'mobile' && device.online) || snapshot.devices.find((device) => device.type === 'mobile');
+    const tv = snapshot.devices.find((device) => device.type === 'tv' && device.online);
+    const desktopOnline = Boolean(desktop?.online);
+    const mobileOnline = Boolean(mobile?.online);
+    $('desktop-state').textContent = desktopOnline ? 'Online' : 'Aguardando';
+    $('client-state').textContent = mobileOnline || Boolean(tv) ? 'Online' : 'Aguardando';
+    $('library-status').textContent = desktopOnline ? 'Computador online' : 'Desktop não conectado';
+    $('library-note').textContent = desktopOnline
+      ? 'Último sinal ' + relativeTime(desktop.lastSeen) + '. A disponibilidade da biblioteca também depende da autorização do aparelho.'
+      : 'Abra o Cobre Desktop, entre na mesma conta Cobre ID e confira se ele aparece como online.';
+    $('desktop-last-seen').textContent = desktop?.lastSeen ? relativeTime(desktop.lastSeen) : '—';
+    $('mobile-status').textContent = mobileOnline ? 'Celular online' : 'Celular não conectado';
+    $('mobile-note').textContent = mobileOnline
+      ? 'Último sinal ' + relativeTime(mobile.lastSeen) + '. Isso confirma Cobre ID, não a reprodução.'
+      : 'Confira o endereço do Server, a rede Wi-Fi e o estado do Server no computador.';
+    $('mobile-last-seen').textContent = mobile?.lastSeen ? relativeTime(mobile.lastSeen) : '—';
+    $('pairing-summary').textContent = desktopOnline && mobileOnline ? 'Desktop e celular conectados ao Cobre ID'
+      : desktopOnline ? 'Desktop conectado · aguardando celular'
+      : mobileOnline ? 'Celular conectado · aguardando Desktop' : 'Aguardando aparelhos';
+    const measuredStream = snapshot.devices.find((device) => device.type === 'mobile' && Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 && Number.isSafeInteger(device.streamLatencyMs));
+    $('stream-connection-status').textContent = measuredStream ? 'Última medição de áudio' : 'Aguardando reprodução';
+    $('stream-connection-note').textContent = measuredStream
+      ? 'Medição do trecho Desktop → Mobile. O Server só coordena conta e autorização.'
+      : 'O Desktop envia a música diretamente ao Mobile; o Server não recebe nem retransmite áudio.';
+    $('stream-connection-rate').textContent = measuredStream
+      ? (measuredStream.streamBytesPerSecond >= 1_000_000 ? (measuredStream.streamBytesPerSecond / 1_000_000).toFixed(2) + ' MB/s' : Math.round(measuredStream.streamBytesPerSecond / 1_000) + ' KB/s')
+      : '—';
+    $('stream-connection-latency').textContent = measuredStream ? measuredStream.streamLatencyMs + ' ms até o primeiro dado' : 'sem medição';
     renderDevices(snapshot.devices);
     renderAccessGrants(snapshot.accessGrants);
     renderAccessRequests(pendingRequests);
@@ -226,6 +269,21 @@ document.querySelectorAll('.filter').forEach((item) => item.addEventListener('cl
 }));
 $('device-search').addEventListener('input', () => { if (snapshot) renderDevices(snapshot.devices); });
 $('refresh').addEventListener('click', refresh);
+$('copy-server-address').addEventListener('click', async () => {
+  const value = $('server-address-choice').value;
+  const button = $('copy-server-address');
+  if (!value) return;
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    const field = document.createElement('textarea'); field.value = value; field.style.position = 'fixed'; field.style.opacity = '0';
+    document.body.append(field); field.select();
+    const copied = document.execCommand('copy'); field.remove();
+    if (!copied) { $('server-address-note').textContent = 'Não foi possível copiar. Selecione o endereço e copie manualmente.'; return; }
+  }
+  button.textContent = 'Copiado';
+  window.setTimeout(() => { button.textContent = 'Copiar'; }, 1600);
+});
 $('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
 $('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
 const startupToggle = $('startup-toggle');

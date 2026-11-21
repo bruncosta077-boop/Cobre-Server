@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar Cobre Server 1.0.0 estável](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.0.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
+[Baixar Cobre Server 1.1.0](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.1.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
 
 </div>
 
@@ -26,20 +26,21 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O Cobre Server 1.0.0 é a primeira versão estável do aplicativo. Na página da release estão o ZIP portátil, o instalador Windows e `checksums-sha256.txt`. Compare o SHA-256 do arquivo antes de abrir.
+O Cobre Server 1.1.0 aprimora a tela de conexão e o acesso ao endereço de rede. Na página da release estão o ZIP portátil, o instalador Windows e `checksums-sha256.txt`. Compare o SHA-256 do arquivo antes de abrir.
 
 O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 
 ## O que a central mostra
 
 - Estado do serviço e número de contas Cobre ID.
+- Endereço para informar no Mobile, seleção entre endereços da rede e ação para copiar.
 - Dispositivos vinculados, tipo, plataforma, versão e último heartbeat.
 - Filtros de aparelhos online/offline e busca.
 - Tempo de resposta da API local e endereços/portas usados.
 - Diagnóstico com taxa de áudio recebida e latência inicial informadas pelo Mobile durante stream do Desktop; presença e latência do catálogo permanecem métricas separadas.
 - Atalho para abrir a pasta de dados e opção segura para encerrar o servidor.
 
-O painel mostra medidas reportadas pelo Mobile durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local.
+O painel separa a presença Cobre ID da disponibilidade da biblioteca e da reprodução. Ele mostra medidas reportadas pelo Mobile durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local.
 
 ## Como os aplicativos se conectam
 

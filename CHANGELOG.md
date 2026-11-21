@@ -1,5 +1,13 @@
 # Histórico de versões — Cobre Server
 
+## 1.1.0 — conexão mais clara e painel reorganizado
+
+- A tela inicial agora mostra o endereço do Cobre Server que deve ser informado no celular, permite escolher entre os endereços de rede disponíveis e copiar o selecionado.
+- O caminho do celular ficou direto: entrar no Cobre ID, informar o endereço do Server, pedir acesso ao Desktop e aprovar no Desktop.
+- A seção de conexão separa presença Cobre ID, Desktop, Mobile e medição de áudio, sem indicar que “online” significa biblioteca ou reprodução funcionando.
+- Textos e controles principais ganharam mais legibilidade; a navegação chama a ação principal de **Conectar celular**.
+- O fluxo de autorização e a transmissão não mudaram: o Server coordena Cobre ID e permissões; a música continua indo diretamente do Desktop ao Mobile.
+
 ## 1.0.0 — disponibilidade contínua e primeira versão estável
 
 - Fechar a janela agora mantém o serviço ativo na área de notificação; o menu oferece reabertura do painel e encerramento explícito do Server.
