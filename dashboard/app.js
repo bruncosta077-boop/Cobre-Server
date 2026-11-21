@@ -228,6 +228,29 @@ $('device-search').addEventListener('input', () => { if (snapshot) renderDevices
 $('refresh').addEventListener('click', refresh);
 $('open-data').addEventListener('click', () => window.cobreApp?.openDataFolder());
 $('quit-app').addEventListener('click', () => window.cobreApp?.closeServer());
+const startupToggle = $('startup-toggle');
+const startupNote = $('startup-note');
+async function loadStartupSettings() {
+  try {
+    const state = await window.cobreApp?.startupSettings();
+    startupToggle.disabled = !state?.supported;
+    startupToggle.checked = Boolean(state?.enabled);
+    startupNote.textContent = state?.supported ? '' : 'Disponível na versão instalada do Cobre Server para Windows.';
+  } catch (error) { startupNote.textContent = error.message || 'Não consegui consultar a inicialização do Windows.'; }
+}
+startupToggle.addEventListener('change', async () => {
+  startupToggle.disabled = true;
+  try {
+    const state = await window.cobreApp?.setStartupEnabled(startupToggle.checked);
+    if (!state) throw new Error('Não consegui salvar esta opção.');
+    startupToggle.checked = Boolean(state.enabled);
+    startupNote.textContent = state.enabled ? 'O Cobre Server abrirá em segundo plano ao entrar no Windows.' : 'A inicialização automática foi desativada.';
+  } catch (error) {
+    startupToggle.checked = !startupToggle.checked;
+    startupNote.textContent = error.message || 'Não consegui alterar esta opção.';
+  } finally { startupToggle.disabled = false; }
+});
+loadStartupSettings();
 $('tls-enable').addEventListener('click', async () => {
   const button = $('tls-enable'); button.disabled = true;
   try { const changed = await window.cobreApp?.configureTls(); if (changed) $('tls-details').textContent = 'HTTPS validado. O Cobre Server está reiniciando…'; }

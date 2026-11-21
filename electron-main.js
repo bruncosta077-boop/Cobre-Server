@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 const { DatabaseSync } = require('node:sqlite');
-const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
 const { createServer } = require('./server');
 const { createDashboard } = require('./dashboard');
 const { createBackup, openBackup } = require('./backup');
@@ -19,6 +19,7 @@ const dataDirectory = process.env.DATA_DIR || path.join(app.getPath('userData'),
 let apiServer;
 let dashboardServer;
 let mainWindow;
+let tray;
 let quitting = false;
 let preparedUpdate = null;
 
@@ -39,7 +40,7 @@ function listen(server, port, host) {
 }
 
 function createWindow() {
-  if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.focus(); return; }
+  if (mainWindow && !mainWindow.isDestroyed()) { if (!mainWindow.isVisible()) mainWindow.show(); mainWindow.focus(); return; }
   const panelUrl = `http://127.0.0.1:${dashboardPort}/`;
   mainWindow = new BrowserWindow({
     width: 1260, height: 860, minWidth: 980, minHeight: 680,
@@ -54,8 +55,38 @@ function createWindow() {
     if (new URL(target).origin !== new URL(panelUrl).origin) event.preventDefault();
   });
   mainWindow.once('ready-to-show', () => mainWindow?.show());
+  mainWindow.on('close', (event) => {
+    if (!quitting && tray) { event.preventDefault(); mainWindow?.hide(); }
+  });
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.loadURL(panelUrl);
+}
+
+function createTray() {
+  if (tray) return tray;
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'icon.png'));
+  if (icon.isEmpty()) throw new Error('O ícone da área de notificação não foi encontrado.');
+  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+  tray.setToolTip('Cobre Server · conexão com os aplicativos Cobre');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Abrir Cobre Server', click: createWindow },
+    { label: 'Cobre ID disponível na rede local', enabled: false },
+    { type: 'separator' },
+    { label: 'Encerrar servidor…', click: () => app.quit() },
+  ]));
+  tray.on('double-click', createWindow);
+  return tray;
+}
+
+function startupSettings() {
+  const supported = process.platform === 'win32' && app.isPackaged;
+  return { supported, enabled: supported && app.getLoginItemSettings().openAtLogin };
+}
+
+function setStartupEnabled(enabled) {
+  if (process.platform !== 'win32' || !app.isPackaged) throw new Error('Esta opção fica disponível na versão instalada do Cobre Server no Windows.');
+  app.setLoginItemSettings({ openAtLogin: Boolean(enabled), path: process.execPath, args: ['--background'], name: 'Cobre Server' });
+  return startupSettings();
 }
 
 ipcMain.handle('cobre:close-app', async () => {
@@ -79,6 +110,9 @@ function assertDashboardSender(event) {
   try { origin = new URL(event.senderFrame?.url || '').origin; } catch {}
   if (origin !== `http://127.0.0.1:${dashboardPort}`) throw new Error('A atualização só pode ser controlada pelo painel local do Cobre Server.');
 }
+
+ipcMain.handle('cobre:startup-settings', (event) => { assertDashboardSender(event); return startupSettings(); });
+ipcMain.handle('cobre:set-startup', (event, enabled) => { assertDashboardSender(event); return setStartupEnabled(enabled); });
 
 ipcMain.handle('cobre:update-check', async (event) => {
   assertDashboardSender(event);
@@ -291,7 +325,8 @@ async function start() {
     apiServer.close(); apiServer.close_db();
     throw error;
   }
-  createWindow();
+  try { createTray(); } catch (error) { console.warn('Ícone da área de notificação indisponível:', error.message); }
+  if (!process.argv.includes('--background')) createWindow();
 }
 
 function closeServices() {
@@ -300,6 +335,7 @@ function closeServices() {
   if (dashboardServer?.listening) dashboardServer.close();
   if (apiServer?.listening) apiServer.close();
   if (apiServer) { try { apiServer.close_db(); } catch {} }
+  if (tray) { try { tray.destroy(); } catch {} tray = null; }
 }
 
 app.whenReady().then(() => hasSingleInstanceLock ? start() : undefined).catch((error) => {
@@ -310,4 +346,4 @@ app.whenReady().then(() => cleanupTemporaryInstallers(app.getPath('temp'))).catc
 app.on('second-instance', createWindow);
 app.on('activate', createWindow);
 app.on('before-quit', closeServices);
-app.on('window-all-closed', () => app.quit());
+app.on('window-all-closed', () => { if (!tray) app.quit(); });

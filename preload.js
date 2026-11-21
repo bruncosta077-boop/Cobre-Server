@@ -5,6 +5,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('cobreApp', {
   closeServer: () => ipcRenderer.invoke('cobre:close-app'),
   openDataFolder: () => ipcRenderer.invoke('cobre:open-data-folder'),
+  startupSettings: () => ipcRenderer.invoke('cobre:startup-settings'),
+  setStartupEnabled: (enabled) => ipcRenderer.invoke('cobre:set-startup', enabled),
   exportBackup: (passphrase) => ipcRenderer.invoke('cobre:backup-export', passphrase),
   restoreBackup: (passphrase) => ipcRenderer.invoke('cobre:backup-restore', passphrase),
   checkUpdate: () => ipcRenderer.invoke('cobre:update-check'),

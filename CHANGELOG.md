@@ -1,5 +1,14 @@
 # Histórico de versões — Cobre Server
 
+## 1.0.0 — disponibilidade contínua e primeira versão estável
+
+- Fechar a janela agora mantém o serviço ativo na área de notificação; o menu oferece reabertura do painel e encerramento explícito do Server.
+- Adicionada opção para iniciar a API em segundo plano junto com o Windows, sem abrir uma janela.
+- O ícone da área de notificação é incluído no pacote instalado.
+- Mantidas as proteções de conta, sessão, pareamento, autorização por aparelho, limite de tentativas, validação de origem local e cópia criptografada.
+- O Cobre Server coordena contas e autorizações. A biblioteca e o áudio seguem diretamente do Desktop ao Mobile pela rede local.
+- Verificação antes da publicação: 38 testes da API, segurança, backup e atualizações aprovados. A conexão física por telefone ainda depende da rede local e da permissão do Firewall do Windows.
+
 ## 0.5.0-beta.12 — autorização do Mobile visível e com prazo suficiente
 
 - Aumenta para cinco minutos o prazo de uma solicitação de acesso, para dar tempo de abrir a Conta Cobre no Desktop e aprovar.

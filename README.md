@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar a beta para Windows](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.12) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
+[Baixar Cobre Server 1.0.0 estável](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.0.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
 
 </div>
 
@@ -18,7 +18,7 @@ Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico loca
 
 O Cobre Server é um **aplicativo desktop independente** que mantém os serviços locais do Cobre ID ativos e oferece uma central visual para acompanhar contas, dispositivos e estado do serviço. Ele foi desenhado para fazer parte do [Cobre Desktop](https://github.com/bruncosta077-boop/Cobre), [Mobile](https://github.com/bruncosta077-boop/Cobre-Mobile) e [TV](https://github.com/bruncosta077-boop/Cobre-TV).
 
-Não é uma página hospedada nem um serviço de streaming de áudio. Ao abrir o programa, uma janela própria do Cobre Server aparece e a API fica disponível na rede local para os clientes autorizados.
+Não é uma página hospedada nem um serviço de streaming de áudio. A API local coordena contas e permissões; o áudio segue diretamente do Desktop ao Mobile. Fechar a janela mantém o serviço ativo na área de notificação. Se quiser, habilite **Iniciar com o Windows** nas configurações para o serviço ficar disponível após entrar no computador.
 
 ## Créditos
 
@@ -26,7 +26,7 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O pacote atual é uma **pré-release beta**, não a versão estável 1.0.0. Na página da release estão o ZIP portátil, o instalador Windows e `checksums-sha256.txt`. Compare o SHA-256 do arquivo antes de abrir.
+O Cobre Server 1.0.0 é a primeira versão estável do aplicativo. Na página da release estão o ZIP portátil, o instalador Windows e `checksums-sha256.txt`. Compare o SHA-256 do arquivo antes de abrir.
 
 O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 
