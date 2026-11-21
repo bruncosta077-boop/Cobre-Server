@@ -1,5 +1,13 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-21 — solicitação do Mobile e autorização do Desktop sincronizadas
+
+- Corrigi a causa concreta do timeout: pedidos de acesso duravam 90 segundos no Server, enquanto o Mobile desistia após 84 segundos. O Cobre Server beta.12 agora mantém cada pedido por cinco minutos; o Mobile 0.12.1 usa o `expiresIn` retornado e aguarda esse prazo no fluxo manual e no QR.
+- O painel agora mostra solicitações pendentes, nome do celular, conta, Desktop e vencimento. A navegação deixa quatro áreas principais visíveis e recolhe conexões, configurações e notas em **Mais opções**. Nenhum token é exibido no painel; o Desktop continua sendo o único lugar para permitir ou recusar.
+- Revisei o Desktop 3.10.0 no Git (`4820eed`): essa versão adicionou o QR seguro, mas manteve os pedidos na janela separada **Conta Cobre**, que se abre pelo botão **Conta Cobre…** em Configurações. A janela consulta pedidos a cada cinco segundos; não há aprovação de acesso na tela principal. O Mobile e o Server agora dizem explicitamente onde encontrá-la.
+- Server: testes 38/38, auditoria sem vulnerabilidades, verificações de sintaxe/whitespace e pacote Windows local aprovados. GitHub Actions da beta.12 `44909912101` terminou com sucesso. [Release beta.12](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.12), com instalador, ZIP e checksums. SHA-256: EXE `dab580db6ec11653a50031b0e71584f99e264df954a334cfb43147af3868013a`; ZIP `5eba3335ed62e297f726fcfec2194c13bfab04deda25f3934c87f790540fdb27`.
+- Mobile: commit `a4a88f0` passou no build debug do GitHub Actions `44909781316`; release assinada `mobile-v0.12.1` está em compilação/publicação no run `44910015984`.
+
 ## 2026-11-21 — quadro geral corrigido após publicação do Mobile 0.12.0
 
 - Corrigi [`docs/ESTADO-ECOSSISTEMA.md`](ESTADO-ECOSSISTEMA.md): agora registra a release assinada `mobile-v0.12.0` já publicada, a necessidade de cautela na migração inicial de APK debug e que as próximas atualizações com a mesma chave mantêm os dados.
