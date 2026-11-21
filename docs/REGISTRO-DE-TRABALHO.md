@@ -6,7 +6,7 @@
 - O painel agora mostra solicitações pendentes, nome do celular, conta, Desktop e vencimento. A navegação deixa quatro áreas principais visíveis e recolhe conexões, configurações e notas em **Mais opções**. Nenhum token é exibido no painel; o Desktop continua sendo o único lugar para permitir ou recusar.
 - Revisei o Desktop 3.10.0 no Git (`4820eed`): essa versão adicionou o QR seguro, mas manteve os pedidos na janela separada **Conta Cobre**, que se abre pelo botão **Conta Cobre…** em Configurações. A janela consulta pedidos a cada cinco segundos; não há aprovação de acesso na tela principal. O Mobile e o Server agora dizem explicitamente onde encontrá-la.
 - Server: testes 38/38, auditoria sem vulnerabilidades, verificações de sintaxe/whitespace e pacote Windows local aprovados. GitHub Actions da beta.12 `44909912101` terminou com sucesso. [Release beta.12](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v0.5.0-beta.12), com instalador, ZIP e checksums. SHA-256: EXE `dab580db6ec11653a50031b0e71584f99e264df954a334cfb43147af3868013a`; ZIP `5eba3335ed62e297f726fcfec2194c13bfab04deda25f3934c87f790540fdb27`.
-- Mobile: commit `a4a88f0` passou no build debug do GitHub Actions `44909781316`; release assinada `mobile-v0.12.1` está em compilação/publicação no run `44910015984`.
+- Mobile: commit `a4a88f0` passou no build debug do GitHub Actions `44909781316`; o run `44910015984` compilou a versão release, validou a assinatura com `apksigner` e publicou o [APK 0.12.1](https://github.com/bruncosta077-boop/Cobre-Mobile/releases/tag/mobile-v0.12.1) (HTTP 200, 49.404.422 bytes). SHA-256 oficial: `790fa25f6341e0f880a82e56e423aee94e23dea00f6ff66ba08f14742d9e8e0b`.
 
 ## 2026-11-21 — quadro geral corrigido após publicação do Mobile 0.12.0
 
