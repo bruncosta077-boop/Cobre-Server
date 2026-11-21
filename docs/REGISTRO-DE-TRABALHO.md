@@ -1,5 +1,10 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-21 — quadro geral corrigido após publicação do Mobile 0.12.0
+
+- Corrigi [`docs/ESTADO-ECOSSISTEMA.md`](ESTADO-ECOSSISTEMA.md): agora registra a release assinada `mobile-v0.12.0` já publicada, a necessidade de cautela na migração inicial de APK debug e que as próximas atualizações com a mesma chave mantêm os dados.
+- Mantive como pendente a validação dessa migração no aparelho e os marcos reais de integração/TV. O APK assinado foi confirmado na release do GitHub com 49.404.426 bytes.
+
 ## 2026-11-20 — Cobre Server 0.5.0-beta.11 publicado
 
 - Refiz a identidade do ícone usando os sete tamanhos do ICO original do Desktop como base. O C cobre, o brilho e o fundo permanecem intactos fora da área central; substituí somente as barras centrais por três módulos Server menores, centralizados e monocromáticos.
