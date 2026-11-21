@@ -4,15 +4,15 @@
 
 - **Cobre Desktop:** mantém a biblioteca local e é a origem dos arquivos de áudio.
 - **Cobre Server (este repositório):** cuida da identidade Cobre ID, sessões, dispositivos e aprovação de pareamento. É o ponto de coordenação entre os clientes.
-- **Cobre Mobile e Cobre TV:** clientes que solicitam autorização para acessar um Desktop; o Mobile já implementa catálogo, comandos e áudio direto do host.
+- **Cobre Mobile e Cobre TV:** clientes que solicitam autorização para acessar um Desktop; ambos usam concessões por dispositivo para catálogo e áudio direto do host.
 
 O áudio deve sair diretamente do Desktop para o aparelho pela rede local. O Cobre Server não deve receber nem retransmitir a biblioteca. Isso evita transformar o servidor de identidade em um relay de mídia e reduz o tráfego central.
 
 ## O que o código atual faz
 
-O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e oferece endpoints para pareamento e autorização. O Cobre Mobile pede acesso ao Desktop; o Desktop aprova ou recusa e o Server emite a concessão. A presença informa que um aparelho enviou um heartbeat recentemente; ela não confirma, sozinha, que o catálogo ou o áudio estão acessíveis.
+O serviço registra contas e dispositivos, autentica clientes, renova e revoga sessões, recebe presença e oferece endpoints para pareamento e autorização. Mobile e TV podem pedir acesso a um Desktop; o Desktop aprova ou recusa e o Server emite a concessão. A presença informa que um aparelho enviou um heartbeat recentemente; ela não confirma, sozinha, que o catálogo ou o áudio estão acessíveis.
 
-O serviço local do Desktop responde em sua porta LAN própria e valida as concessões do Server nas rotas protegidas. A aprovação cria consentimento revogável de 30 dias; o Mobile recebe tokens curtos e os renova com a sessão Cobre ID enquanto o consentimento estiver ativo. A biblioteca, os controles e o áudio seguem diretamente entre Desktop e Mobile; o Server não recebe arquivos. A TV permanece com biblioteca de demonstração e sem reprodução de áudio.
+O serviço local do Desktop responde em sua porta LAN própria e valida as concessões do Server nas rotas protegidas. A aprovação cria consentimento revogável de 30 dias; Mobile e TV recebem tokens curtos e os renovam com a sessão Cobre ID enquanto o consentimento estiver ativo. A biblioteca, as capas e o áudio seguem diretamente do Desktop ao Mobile ou à TV; o Server não recebe arquivos. A base da TV 0.3.0 agora integra autorização, catálogo e reprodução direta, ainda sem validação em televisão física.
 
 O Cobre Server 1.0.0 é um aplicativo desktop Electron. A janela usa o painel local em `127.0.0.1:8788`, iniciado junto da API. Fechar a janela mantém os serviços ativos na área de notificação; o início com o Windows pode ser habilitado nas configurações. O painel consulta contas e presença sem expor a interface administrativa à rede. A métrica de resposta mede a chamada local à API; não é latência do streaming. Taxa e estabilidade do áudio dependem de medições reportadas pelos clientes. A partir da 0.5.0-beta.1, a interface exporta e restaura a base e a chave em um arquivo autenticado e criptografado por senha.
 
