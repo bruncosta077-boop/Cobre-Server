@@ -7,7 +7,7 @@
 - O Cobre TV envia presença periódica enquanto está aberto e mede somente bytes da rota de stream; o Cobre Server continua sem receber ou retransmitir áudio.
 - A API mantém as mesmas rotas e o mesmo formato de sessão; a alteração não muda consentimentos, concessões ou regras de autorização.
 - Validação local: 38 testes passam, `npm audit --audit-level=moderate` não encontra vulnerabilidades e `node --check dashboard/app.js` passa.
-- ZIP portátil e instalador Windows x64 foram gerados localmente; o workflow ainda precisa repetir a geração e publicar os arquivos no GitHub. Confirmar telemetria com Mobile e TV físicos continua pendente.
+- Testes, auditoria e empacotamento passaram no [workflow de release](https://github.com/bruncosta077-boop/Cobre-Server/actions/runs/44949292127); ZIP portátil, instalador Windows x64 e checksums estão publicados na [release 1.2.0](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.2.0). Confirmar telemetria com Mobile e TV físicos continua pendente.
 
 ## 1.1.0 — conexão mais clara e painel reorganizado
 

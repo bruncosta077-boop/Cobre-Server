@@ -2,11 +2,11 @@
 
 ## Estado atual
 
-- **Server 1.1.0 estável; 1.2.0 em validação:** identidade Cobre ID, sessões, presença, pareamento, pedidos e revogação por Desktop; 1.2.0 filtra telemetria recente Mobile/TV no diagnóstico.
+- **Server 1.2.0 estável:** identidade Cobre ID, sessões, presença, pareamento, pedidos e revogação por Desktop; diagnóstico filtra telemetria recente Mobile/TV.
 - **Desktop 3.13.0:** anuncia presença local por mDNS quando o acesso remoto e o Cobre ID estão ativos. O anúncio não contém credenciais; os clientes ainda precisam de concessão e aprovação.
-- **Mobile 0.15.0 pré-release assinada; 0.16.0 em validação:** login, QR e descoberta local; a nova versão envia a idade da amostra de stream para o Server.
-- **TV 0.5.0 em validação:** biblioteca, reprodução direta do Desktop, descoberta local, autorização Cobre ID, presença periódica e medição agregada do stream. APK ainda é somente debug.
-- A nova versão do painel prevista para 1.2.0 estende o diagnóstico de áudio do Mobile para TV e mostra somente amostras recentes de aparelhos online.
+- **Mobile 0.16.0 pré-release assinada:** login, QR e descoberta local; envia a idade da amostra de stream para o Server.
+- **TV 0.5.0 em desenvolvimento:** build/lint e CI passam; biblioteca, reprodução direta, descoberta local, autorização Cobre ID, presença e medição agregada. APK somente debug, sem validação física.
+- O painel do Server mostra métricas de áudio recentes do Mobile/TV somente enquanto aparelho e amostra estão ativos.
 
 ## Prioridades
 

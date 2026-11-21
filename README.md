@@ -8,7 +8,7 @@
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar Cobre Server 1.1.0](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.1.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
+[Baixar Cobre Server 1.2.0](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.2.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
 
 </div>
 
@@ -26,7 +26,7 @@ Projeto de Bruno C S Moraes, com contribuições de [@dilucas00](https://github.
 
 ## Baixar o aplicativo
 
-O Cobre Server 1.1.0 aprimora a tela de conexão e o acesso ao endereço de rede. Na página da release estão o ZIP portátil, o instalador Windows e `checksums-sha256.txt`. Compare o SHA-256 do arquivo antes de abrir.
+O Cobre Server 1.2.0 aprimora o diagnóstico de stream com medições recentes informadas pelo Mobile e pela TV. Na página da release estão o ZIP portátil, o instalador Windows e `checksums-sha256.txt`. Compare o SHA-256 do arquivo antes de abrir.
 
 O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a chave local na pasta de dados do usuário do Windows. Leia [Segurança e dados](#seguranca-e-dados) antes de permitir conexões na rede.
 
