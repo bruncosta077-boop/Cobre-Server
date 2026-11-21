@@ -169,6 +169,10 @@ test('acesso ao Desktop é aprovado pelo host, limitado, listável e revogável'
   const path = `/v1/hosts/${hostId}/access-requests`;
   const request = await call('POST', path, { scopes: ['stream', 'library.read', 'playback.control'] }, mobile.body.accessToken);
   assert.equal(request.status, 201);
+  assert.equal(request.body.expiresIn, 300);
+  const pendingForDashboard = srv.dashboardSnapshot().pendingAccessRequests.find((item) => item.requestId === request.body.requestId);
+  assert.equal(pendingForDashboard.clientName, 'Celular de teste');
+  assert.equal(pendingForDashboard.hostName, 'PC da sala');
   const pollPath = `${path}/${request.body.requestId}`;
   assert.equal((await call('GET', pollPath, null, mobile.body.accessToken)).body.status, 'pending');
   assert.equal((await call('GET', pollPath, null, secondHost.body.accessToken)).status, 404);
@@ -182,6 +186,7 @@ test('acesso ao Desktop é aprovado pelo host, limitado, listável e revogável'
   assert.equal((await call('POST', `${`/v1/hosts/${secondHost.body.device.id}/access-requests`}/${request.body.requestId}/approve`, {}, secondHost.body.accessToken)).status, 404);
   const approved = await call('POST', approvePath, {}, hostToken);
   assert.equal(approved.body.status, 'approved');
+  assert.equal(srv.dashboardSnapshot().pendingAccessRequests.some((item) => item.requestId === request.body.requestId), false);
   const dashboardGrant = srv.dashboardSnapshot().accessGrants.find((grant) => grant.grantId === approved.body.grantId);
   assert.equal(dashboardGrant.accountEmail, 'host-grants@teste.com');
   assert.equal(dashboardGrant.clientName, 'Celular de teste');

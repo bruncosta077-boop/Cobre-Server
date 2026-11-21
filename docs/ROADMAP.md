@@ -1,8 +1,9 @@
 # Roadmap do Cobre Server
 
-## Versão em publicação — 0.5.0-beta.11
+## Versão em publicação — 0.5.0-beta.12
 
 - [x] Identidade visual própria para o aplicativo Cobre Server, com símbolo de módulos centrais distinto do player Desktop.
+- [x] Pedidos de autorização Mobile visíveis no painel local, com instruções para aprovar pelo Desktop e prazo sincronizado com o Mobile.
 
 ## Funcionalidades publicadas — até 0.5.0-beta.9
 

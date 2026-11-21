@@ -109,11 +109,36 @@ function renderAccessGrants(grants) {
   }
 }
 
+function renderAccessRequests(requests) {
+  const rows = $('request-rows');
+  if (!rows) return;
+  rows.replaceChildren();
+  if (!requests.length) {
+    const tr = document.createElement('tr'); const td = document.createElement('td');
+    td.colSpan = 6; td.className = 'empty';
+    td.textContent = 'Nenhum pedido pendente. Se você acabou de pedir no Mobile, abra Conta Cobre no Desktop e aprove o acesso.';
+    tr.append(td); rows.append(tr); return;
+  }
+  const date = (timestamp) => new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(timestamp));
+  for (const request of requests) {
+    const row = document.createElement('tr');
+    cell(row, request.accountEmail);
+    cell(row, `${request.clientName} · ${typeNames[request.clientType] || request.clientType}`);
+    cell(row, request.hostName);
+    cell(row, date(request.createdAt));
+    cell(row, date(request.expiresAt));
+    const state = document.createElement('td');
+    const badge = document.createElement('span'); badge.className = 'request-pending'; badge.textContent = 'Aprove no Desktop';
+    state.append(badge); row.append(state); rows.append(row);
+  }
+}
+
 function showPage(name) {
-  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', access: 'Acessos ao Desktop', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
+  const labels = { overview: 'Visão geral', accounts: 'Contas Cobre ID', devices: 'Dispositivos', access: 'Acesso ao Mobile', connections: 'Conexões', settings: 'Configurações', releases: 'Notas da versão' };
   if (!labels[name]) return;
   document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === `page-${name}`));
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
+  document.querySelector('.nav-more')?.removeAttribute('open');
   $('breadcrumb-page').textContent = labels[name];
 }
 
@@ -138,7 +163,8 @@ async function refresh() {
     $('device-count').textContent = snapshot.deviceCount;
     $('identity-online').textContent = online;
     $('nav-online').textContent = online;
-    $('nav-grants').textContent = snapshot.accessGrants.length;
+    const pendingRequests = snapshot.pendingAccessRequests || [];
+    $('nav-requests').textContent = pendingRequests.length;
     $('latency').textContent = elapsed;
     $('last-update').textContent = `Atualizado às ${formatter.format(new Date())}`;
     const apiProtocol = snapshot.secureTransport ? 'https' : 'http';
@@ -181,6 +207,7 @@ async function refresh() {
     $('client-state').textContent = snapshot.devices.some((d) => ['mobile', 'tv'].includes(d.type) && d.online) ? 'Online' : 'Aguardando';
     renderDevices(snapshot.devices);
     renderAccessGrants(snapshot.accessGrants);
+    renderAccessRequests(pendingRequests);
   } catch {
     $('service-label').textContent = 'Serviço indisponível';
     $('side-service').textContent = 'Sem conexão';

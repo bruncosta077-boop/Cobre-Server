@@ -1,5 +1,12 @@
 # Histórico de versões — Cobre Server
 
+## 0.5.0-beta.12 — autorização do Mobile visível e com prazo suficiente
+
+- Aumenta para cinco minutos o prazo de uma solicitação de acesso, para dar tempo de abrir a Conta Cobre no Desktop e aprovar.
+- A tela **Acesso ao Mobile** mostra pedidos pendentes, computador solicitante e expiração; a aprovação continua no Desktop e o token é entregue automaticamente ao celular.
+- A página inicial explica onde aprovar. Navegação principal destaca acesso, aparelhos e conta; conexões, configurações e notas ficam em **Mais opções**.
+- O Mobile agora aguarda pelo prazo informado pelo Server em vez de encerrar a espera em 84 segundos.
+
 ## 0.5.0-beta.11 — ícone alinhado à identidade Cobre
 
 - O ícone do Server agora parte do ICO original do Desktop e preserva a moldura, o tom cobre e o brilho do C.

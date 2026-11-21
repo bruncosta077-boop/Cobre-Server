@@ -115,6 +115,11 @@ function createServer(opts = {}) {
     pendingHostRequests: db.prepare(`SELECT r.id,r.client_device_id,r.scopes,r.created,r.expires,d.name AS client_name,d.type AS client_type
       FROM host_access_requests r JOIN devices d ON d.id=r.client_device_id
       WHERE r.host_device_id=? AND r.user_id=? AND r.status='pending' AND r.expires>=? ORDER BY r.created`),
+    dashboardHostRequests: db.prepare(`SELECT r.id,r.scopes,r.created,r.expires,d.name AS client_name,d.type AS client_type,
+      h.name AS host_name,u.email
+      FROM host_access_requests r JOIN devices d ON d.id=r.client_device_id
+      JOIN devices h ON h.id=r.host_device_id JOIN users u ON u.id=r.user_id
+      WHERE r.status='pending' AND r.expires>=? ORDER BY r.created DESC`),
     approveHostRequest: db.prepare("UPDATE host_access_requests SET status='redeemed',grant_id=? WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
     denyHostRequest: db.prepare("UPDATE host_access_requests SET status='denied' WHERE id=? AND host_device_id=? AND user_id=? AND status='pending' AND expires>=?"),
     addHostGrant: db.prepare('INSERT INTO host_access_grants(id,user_id,client_device_id,host_device_id,scopes,created,expires) VALUES(?,?,?,?,?,?,?)'),
@@ -291,7 +296,7 @@ function createServer(opts = {}) {
     throw new HttpError(503, 'code_unavailable', 'Não foi possível gerar um código agora. Tente novamente.');
   };
   const HOST_GRANT_TTL = opts.hostGrantTtl ?? 10 * 60_000, HOST_CONSENT_TTL = opts.hostConsentTtl ?? 30 * 24 * 60 * 60_000,
-    HOST_REQUEST_TTL = opts.hostRequestTtl ?? 90_000;
+    HOST_REQUEST_TTL = opts.hostRequestTtl ?? 5 * 60_000;
   const HOST_SCOPES = new Set(['library.read', 'playback.read', 'playback.control', 'stream']);
   const hostScopes = (value) => {
     if (value === undefined) return ['library.read', 'playback.read', 'stream'];
@@ -604,6 +609,10 @@ function createServer(opts = {}) {
         accountEmail: grant.email, clientDeviceId: grant.client_device_id, clientName: grant.client_name,
         clientType: grant.client_type, hostDeviceId: grant.host_device_id, hostName: grant.host_name,
         scopes: JSON.parse(grant.scopes), createdAt: grant.created, expiresAt: grant.expires })),
+      pendingAccessRequests: q.dashboardHostRequests.all(now()).map((request) => ({ requestId: request.id,
+        accountEmail: request.email, clientDeviceId: request.client_device_id, clientName: request.client_name,
+        clientType: request.client_type, hostName: request.host_name, scopes: JSON.parse(request.scopes),
+        createdAt: request.created, expiresAt: request.expires })),
       devices: devices.map((d) => {
         let meta = {}; try { meta = JSON.parse(d.meta); } catch {}
         return { id: d.id, name: d.name, type: d.type, createdAt: d.created, lastSeen: d.last_seen || null,
