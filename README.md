@@ -4,6 +4,8 @@
 
 # Cobre Server
 
+O código do Cobre é proprietário e está disponível publicamente para inspeção. Consulte o [aviso de licença](LICENSE); componentes de terceiros mantêm suas próprias licenças.
+
 **O centro de identidade e conexão do ecossistema Cobre.**
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
