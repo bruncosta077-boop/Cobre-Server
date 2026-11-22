@@ -91,6 +91,8 @@ function createServer(opts = {}) {
   const q = {
     userByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
     userById: db.prepare('SELECT id, email FROM users WHERE id = ?'),
+    userPassById: db.prepare('SELECT pass FROM users WHERE id = ?'),
+    delUser: db.prepare('DELETE FROM users WHERE id = ?'),
     addUser: db.prepare('INSERT INTO users(id,email,pass,created) VALUES(?,?,?,?)'),
     addDevice: db.prepare('INSERT INTO devices(id,user_id,name,type,created,last_seen) VALUES(?,?,?,?,?,?)'),
     device: db.prepare('SELECT * FROM devices WHERE id = ?'),
@@ -369,6 +371,24 @@ function createServer(opts = {}) {
       const a = auth(req);
       q.delDevice.run(a.did, a.uid);
       return [200, { ok: true }];
+    },
+
+    'POST /v1/account/deletion': async (req, body) => {
+      const a = auth(req);
+      const ip = ipOf(req);
+      const key = `delete:${a.uid}|${ip}`;
+      const wait = blocked(key, cfg.maxFails);
+      if (wait) throw new HttpError(429, 'rate_limited', 'Muitas tentativas. Aguarde.', { retryAfter: wait });
+      const password = typeof body.password === 'string' ? body.password.slice(0, 200) : '';
+      const user = q.userPassById.get(a.uid);
+      const valid = await checkPass(password, user?.pass || await DUMMY);
+      if (!user || !valid) {
+        addFail(key);
+        throw new HttpError(401, 'bad_credentials', 'Senha incorreta. A conta não foi excluída.');
+      }
+      fails.delete(key);
+      transaction(() => q.delUser.run(a.uid));
+      return [200, { ok: true, deleted: true }];
     },
 
     'GET /v1/devices': async (req) => {

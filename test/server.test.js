@@ -291,6 +291,25 @@ test('logout remove o próprio dispositivo', async () => {
   assert.equal((await call('GET', '/v1/devices', null, a.body.accessToken)).status, 401);
 });
 
+test('exclusão da conta exige senha e revoga todas as sessões da conta', async () => {
+  const account = await call('POST', '/v1/register', { email: 'excluir@cobre.test', password: 'senha-de-exclusao-9', device: PC });
+  const second = await call('POST', '/v1/login', { email: 'excluir@cobre.test', password: 'senha-de-exclusao-9', device: CEL });
+  assert.equal(second.status, 200);
+
+  const wrong = await call('POST', '/v1/account/deletion', { password: 'senha-errada' }, account.body.accessToken);
+  assert.equal(wrong.status, 401);
+  assert.equal(wrong.body.error, 'bad_credentials');
+  assert.equal((await call('GET', '/v1/devices', null, second.body.accessToken)).status, 200);
+
+  const deleted = await call('POST', '/v1/account/deletion', { password: 'senha-de-exclusao-9' }, account.body.accessToken);
+  assert.equal(deleted.status, 200);
+  assert.equal(deleted.body.deleted, true);
+  assert.equal((await call('GET', '/v1/devices', null, account.body.accessToken)).status, 401);
+  assert.equal((await call('GET', '/v1/devices', null, second.body.accessToken)).status, 401);
+  assert.equal((await call('POST', '/v1/refresh', { refreshToken: second.body.refreshToken })).status, 401);
+  assert.equal((await call('POST', '/v1/login', { email: 'excluir@cobre.test', password: 'senha-de-exclusao-9', device: PC })).status, 401);
+});
+
 test('pareamento da TV aprova uma vez, cria o dispositivo e emite a sessão', async () => {
   const account = await call('POST', '/v1/login', { email: 'ana@exemplo.com', password: 'senha-forte-1', device: CEL });
   const request = await call('POST', '/v1/device/authorization', { device: { name: 'Cobre TV sala' } });

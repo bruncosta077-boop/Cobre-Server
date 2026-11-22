@@ -1,5 +1,12 @@
 # Histórico de versões — Cobre Server
 
+## 1.3.0 — exclusão segura da conta Cobre ID (em validação)
+
+- Adicionada a rota autenticada `POST /v1/account/deletion`; exige a senha atual e aplica limite de tentativas.
+- A exclusão transacional remove em cascata dispositivos, sessões, códigos de pareamento, solicitações e permissões.
+- O Mobile agora permite solicitar a exclusão com confirmação explícita e senha; músicas e preferências locais permanecem no aparelho.
+- Validação local: 39 testes passam e `npm audit --audit-level=moderate` não encontra vulnerabilidades conhecidas. Falta validar em aparelhos reais e disponibilizar um fluxo web público de solicitação para requisitos de publicação na Play Store.
+
 ## 1.2.0 — diagnóstico de stream de Mobile e TV
 
 - O painel agora reconhece medições agregadas enviadas tanto pelo Cobre Mobile quanto pela TV, mantendo clara a origem Desktop → aparelho.

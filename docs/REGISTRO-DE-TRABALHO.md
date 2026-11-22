@@ -1,5 +1,12 @@
 # Registro de trabalho — Ecossistema Cobre
 
+## 2026-11-22 — exclusão de conta Cobre ID
+
+- Server 1.3.0: adicionada exclusão autenticada que exige a senha atual, aplica limite de tentativas e remove a conta numa transação. As relações SQLite em cascata revogam imediatamente sessões, dispositivos, códigos, solicitações e permissões.
+- Mobile 0.19.0 em preparação: a tela Cobre ID permite excluir a conta com confirmação clara. A exclusão limpa tokens e concessão Desktop deste aparelho; arquivos de áudio e preferências locais permanecem.
+- Validação local: 39/39 testes Server passaram; `npm audit --audit-level=moderate` reportou zero vulnerabilidades conhecidas. O build Android local não está disponível neste ambiente; será validado no workflow do repositório.
+- Ainda pendente para publicação Play: fluxo web público de exclusão/solicitação e validação física em Android. A release Server será publicada depois do CI; não publicar tag Mobile antes de verificar o build.
+
 ## 2026-11-21 — estabilidade do Cobre Server e diagnóstico de rede
 
 - Desktop: corrigi a versão fixa 3.11.0 do rodapé/Sobre/diagnóstico; a interface agora consulta `app.getVersion()`. Release 3.12.2 publicada com instalador, ZIP portátil, pacote de atualização e checksums; Actions de branch/tag concluíram com sucesso.

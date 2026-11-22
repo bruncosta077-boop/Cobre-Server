@@ -2,6 +2,8 @@
 
 ## Responsabilidades
 
+O endpoint `POST /v1/account/deletion` exige sessão válida e confirmação da senha atual. A remoção acontece em transação e as chaves estrangeiras apagam sessões, dispositivos, pareamentos e concessões associadas; tokens de acesso param de funcionar imediatamente após a confirmação.
+
 - **Cobre Desktop:** mantém a biblioteca local e é a origem dos arquivos de áudio.
 - **Cobre Server (este repositório):** cuida da identidade Cobre ID, sessões, dispositivos e aprovação de pareamento. É o ponto de coordenação entre os clientes.
 - **Cobre Mobile e Cobre TV:** clientes que solicitam autorização para acessar um Desktop; ambos usam concessões por dispositivo para catálogo e áudio direto do host.
