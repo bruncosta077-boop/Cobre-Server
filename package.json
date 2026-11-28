@@ -1,6 +1,6 @@
 {
   "name": "cobre-server",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "license": "UNLICENSED",
   "private": true,
   "description": "Aplicativo desktop do Cobre Server para identidade, dispositivos, presença e diagnóstico do ecossistema Cobre.",

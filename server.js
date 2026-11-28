@@ -37,7 +37,8 @@ function isLanAddress(raw) {
   if (family !== 4) return false;
   const octets = address.split('.').map(Number);
   const [a, b] = octets;
-  return a === 10 || a === 127 || (a === 169 && b === 254) || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
+  return a === 10 || a === 127 || (a === 169 && b === 254) || (a === 192 && b === 168) ||
+    (a === 172 && b >= 16 && b <= 31) || (a === 100 && b >= 64 && b <= 127); // Tailscale CGNAT
 }
 
 function createServer(opts = {}) {
@@ -627,7 +628,8 @@ function createServer(opts = {}) {
       name: 'Cobre Server', version: appInfo.version, serverTime: now(), uptimeSeconds: Math.floor(process.uptime()), dataDir: cfg.dataDir,
       secureTransport: Boolean(transport), certificateInfo: transport?.certificateInfo || null,
       apiPort: server.address()?.port || Number(process.env.PORT || 8080),
-      lanAddresses: Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal).map((a) => a.address),
+      lanAddresses: Object.values(os.networkInterfaces()).flat()
+        .filter((a) => a && a.family === 'IPv4' && !a.internal && isLanAddress(a.address)).map((a) => a.address),
       onlineWindowMs: cfg.onlineWindow, accountCount: db.prepare('SELECT COUNT(*) AS count FROM users').get().count,
       deviceCount: devices.length,
       accessGrants: q.dashboardHostGrants.all(now()).map((grant) => ({ grantId: grant.id,
@@ -682,7 +684,7 @@ if (require.main === module) {
   const dashboardPort = Number(process.env.DASHBOARD_PORT || 8788);
   const os = require('os');
   const score = (ip) => (ip.startsWith('192.168.') ? 3 : ip.startsWith('10.') || /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2 : ip.startsWith('169.254.') ? -1 : 0);
-  const lan = Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal)
+  const lan = Object.values(os.networkInterfaces()).flat().filter((a) => a && a.family === 'IPv4' && !a.internal && isLanAddress(a.address))
     .map((a) => a.address).sort((a, b) => score(b) - score(a));
   const { readConfiguredTlsPair } = require('./tls-config');
   const transport = readConfiguredTlsPair(process.env.DATA_DIR || path.join(__dirname, 'data'));

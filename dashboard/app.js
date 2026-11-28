@@ -190,13 +190,13 @@ async function refresh() {
     if (usableAddresses.includes(oldAddress)) addressSelect.value = oldAddress;
     $('server-address-note').textContent = snapshot.secureTransport
       ? 'O endereço precisa corresponder ao certificado HTTPS e ser confiável no celular.'
-      : 'Use o mesmo Wi-Fi no computador e no celular. Não use este endereço fora da rede local.';
+      : 'Na mesma rede, use o endereço local. Fora de casa, use o endereço 100.x do Tailscale; não abra portas no roteador.';
     $('tls-status').textContent = snapshot.secureTransport ? 'HTTPS · criptografado' : 'HTTP · sem criptografia';
     $('tls-enable').hidden = Boolean(snapshot.secureTransport);
     $('tls-disable').hidden = !snapshot.secureTransport;
     $('tls-details').textContent = snapshot.secureTransport
       ? `Certificado HTTPS ativo${snapshot.certificateInfo?.hosts?.length ? ` · válido para ${snapshot.certificateInfo.hosts.join(', ')}` : ''}${snapshot.certificateInfo?.validTo ? ` · expira ${snapshot.certificateInfo.validTo}` : ''}. Os aparelhos precisam usar um desses endereços.`
-      : 'Use um certificado TLS válido e confiável para o endereço configurado nos aplicativos. Certificados autoassinados não são confiáveis automaticamente.';
+      : 'Na rede local, HTTP fica restrito a endereços privados. No Tailscale, o túnel VPN criptografa o tráfego entre os aparelhos; o Cobre Server ainda aceita apenas clientes da rede local ou da VPN.';
     for (const id of ['side-version', 'footer-version']) $(id).textContent = `v${snapshot.version}`;
     const recentStream = (device) => ['mobile', 'tv'].includes(device.type) && device.online &&
       Number.isSafeInteger(device.streamBytesPerSecond) && device.streamBytesPerSecond > 0 &&

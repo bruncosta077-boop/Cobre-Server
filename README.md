@@ -10,7 +10,9 @@ O código do Cobre é proprietário e está disponível publicamente para inspe�
 
 Aplicativo desktop para Windows · Cobre ID · Dispositivos · Diagnóstico local
 
-[Baixar Cobre Server 1.2.0](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.2.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
+[Baixar Cobre Server 1.4.0](https://github.com/bruncosta077-boop/Cobre-Server/releases/tag/v1.4.0) · [Estado dos quatro apps](docs/ESTADO-ECOSSISTEMA.md) · [Arquitetura](docs/ARQUITETURA.md) · [Roadmap](docs/roadmap.md)
+
+Para conexão fora de casa, instale Tailscale no computador e celular e entre na mesma rede privada. Use o endereço `100.x` mostrado neste painel para o Cobre ID e no Desktop. Não é necessário abrir portas no roteador.
 
 </div>
 
@@ -42,7 +44,7 @@ O ZIP não exige Node.js instalado. A primeira inicialização cria o banco e a 
 - Diagnóstico com taxa de áudio recebida e latência inicial informadas pelo Mobile ou TV durante stream do Desktop; só mostra amostras recentes de aparelhos online, enquanto presença e latência do catálogo permanecem métricas separadas.
 - Atalho para abrir a pasta de dados e opção segura para encerrar o servidor.
 
-O painel separa presença Cobre ID da disponibilidade da biblioteca e da reprodução. Ele mostra medidas recentes reportadas pelos clientes durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local.
+O painel separa presença Cobre ID da disponibilidade da biblioteca e da reprodução. Ele mostra medidas recentes reportadas pelos clientes durante reprodução do Desktop. O Cobre Server **não retransmite músicas**; os bytes do áudio seguem diretamente do Desktop ao aparelho pela rede local ou pelo túnel Tailscale.
 
 ## Como os aplicativos se conectam
 
@@ -81,7 +83,7 @@ npm test
 
 ## Segurança e dados
 
-O aplicativo escuta a API em `0.0.0.0:8080` para que os clientes da rede local possam acessá-la, mas recusa conexões cujo IP de origem não seja loopback ou uma faixa local privada. O painel administrativo usa `127.0.0.1:8788` e não é publicado na rede. Essa barreira reduz exposição acidental, mas não substitui HTTPS, firewall ou segurança do roteador. Os dados da instância ficam em `%APPDATA%\Cobre Server\data`, incluindo banco e chave de assinatura. **Não compartilhe essa pasta.** Perder a chave invalida as sessões existentes.
+O aplicativo escuta a API em `0.0.0.0:8080` para que os clientes da rede local possam acessá-la, mas recusa conexões cujo IP de origem não seja loopback, faixa local privada ou faixa Tailscale 100.64.0.0/10. O painel administrativo usa `127.0.0.1:8788` e não é publicado na rede. Essa barreira reduz exposição acidental. Para acesso remoto, use o túnel Tailscale; não exponha a porta na internet nem abra portas no roteador. Os dados da instância ficam em `%APPDATA%\Cobre Server\data`, incluindo banco e chave de assinatura. **Não compartilhe essa pasta.** Perder a chave invalida as sessões existentes.
 
 O serviço pode usar HTTP na rede local ou HTTPS com certificado e chave PEM configurados em **Configurações → HTTPS**. HTTPS substitui HTTP na porta da API; depois de reiniciar, atualize a URL nos aplicativos. Use um certificado válido, confiável pelos aparelhos e cujo nome/IP corresponda ao endereço usado. Certificado autoassinado não é aceito automaticamente pelos clientes. HTTPS protege o tráfego local, mas não habilita acesso pela internet: a API continua recusando origens públicas. Sem HTTPS, use somente uma rede Wi-Fi confiável. Estado “online” significa heartbeat recente; não comprova que o Desktop está acessível nem que o áudio está tocando.
 

@@ -8,7 +8,7 @@ O endpoint `POST /v1/account/deletion` exige sessão válida e confirmação da 
 - **Cobre Server (este repositório):** cuida da identidade Cobre ID, sessões, dispositivos e aprovação de pareamento. É o ponto de coordenação entre os clientes.
 - **Cobre Mobile e Cobre TV:** clientes que solicitam autorização para acessar um Desktop; ambos usam concessões por dispositivo para catálogo e áudio direto do host.
 
-O áudio deve sair diretamente do Desktop para o aparelho pela rede local. O Cobre Server não deve receber nem retransmitir a biblioteca. Isso evita transformar o servidor de identidade em um relay de mídia e reduz o tráfego central.
+O áudio deve sair diretamente do Desktop para o aparelho pela rede local ou por uma VPN Tailscale quando os aparelhos estiverem fora da mesma rede. O Cobre Server não deve receber nem retransmitir a biblioteca. Isso evita transformar o servidor de identidade em um relay de mídia e reduz o tráfego central.
 
 ## O que o código atual faz
 
@@ -20,7 +20,7 @@ O Cobre Server é um aplicativo desktop Electron. A janela usa o painel local em
 
 A partir da 0.5.0-beta.5, Configurações pode importar um certificado e uma chave privada PEM; ambos são conferidos antes de salvar. Quando configurado, o serviço atende somente por HTTPS na porta da API, sem manter HTTP paralelo. A confiança continua sendo responsabilidade do certificado e do sistema operacional do cliente; certificados autoassinados não são aceitos automaticamente. Desativar HTTPS volta explicitamente para HTTP.
 
-Desde a beta 0.4.0-beta.2, a API ainda faz bind para receber conexões LAN, mas recusa pedidos com origem fora de loopback e faixas privadas IPv4/IPv6. Em HTTP, isso não cifra o tráfego: senhas e tokens ainda podem ser observados dentro da própria rede local. A configuração HTTPS elimina esse risco somente quando o cliente valida uma cadeia confiável e o nome do certificado corresponde ao endereço.
+A API aceita loopback, redes privadas locais e a faixa de origem Tailscale 100.64.0.0/10; recusa origens públicas. Para acesso fora de casa, Tailscale fornece o túnel criptografado e dispensa portas públicas. Em HTTP, isso não cifra o tráfego: senhas e tokens ainda podem ser observados dentro da própria rede local. A configuração HTTPS elimina esse risco somente quando o cliente valida uma cadeia confiável e o nome do certificado corresponde ao endereço.
 
 ## Diagnóstico de conexão
 
@@ -39,5 +39,5 @@ Uma presença `online` sozinha não é evidência de que o Desktop aceita stream
 - Cada concessão de acesso aponta para um Desktop específico, carrega escopos, expira e pode ser revogada no Server. O Desktop ainda precisa validar a permissão em cada rota protegida.
 - Nenhum segredo do servidor deve ser enviado a clientes.
 - Credenciais não devem aparecer em query strings ou logs.
-- HTTPS é obrigatório para qualquer instância acessível pela internet.
+- HTTPS é obrigatório se o serviço for exposto diretamente à internet. Para conexão remota recomendada, mantenha a API sem exposição pública e use o túnel Tailscale.
 - Métricas devem excluir conteúdo pessoal, caminhos locais e nomes de arquivos.

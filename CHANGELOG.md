@@ -1,5 +1,13 @@
 # Histórico de versões — Cobre Server
 
+## 1.4.0 — acesso pelo Tailscale
+
+- API aceita conexões de origem Tailscale dentro da faixa 100.64.0.0/10 além da rede local.
+- Painel e inicialização exibem o endereço VPN do computador quando o Tailscale está ativo.
+- HTTP continua bloqueado para origens públicas. O túnel Tailscale cifra o tráfego sem abrir portas no roteador.
+- O Server continua validando identidade e permissões; não retransmite arquivos de áudio.
+- Testes cobrem os limites da faixa Tailscale e o bloqueio dos endereços públicos.
+
 ## 1.3.0 — exclusão segura da conta Cobre ID (em validação)
 
 - Adicionada a rota autenticada `POST /v1/account/deletion`; exige a senha atual e aplica limite de tentativas.
